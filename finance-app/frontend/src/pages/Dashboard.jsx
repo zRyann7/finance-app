@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import Sidebar from "../components/layout/Sidebar";
 import DashboardHeader from "../components/dashboard/DashboardHeader";
@@ -5,10 +6,21 @@ import StatisticChart from "../components/dashboard/StatisticChart";
 import Goals from "../components/dashboard/Goals";
 import OtherSavings from "../components/dashboard/OtherSavings";
 import RightPanel from "../components/dashboard/RightPanel";
+import TransactionsDialog from "../components/dashboard/TransactionsDialog";
 import { useDashboardData } from "../hooks/useDashboardData";
 
 export default function Dashboard({ session, onLogout }) {
-  const { summary, transactions, goals, chartData, loading, error } = useDashboardData({ session });
+  const [showTransactions, setShowTransactions] = useState(false);
+  const {
+    summary,
+    transactions,
+    goals,
+    chartData,
+    loading,
+    deletingId,
+    error,
+    removeTransaction,
+  } = useDashboardData({ session });
 
   return (
     <main className="app-scene">
@@ -33,10 +45,23 @@ export default function Dashboard({ session, onLogout }) {
                 <OtherSavings summary={summary} chartData={chartData} />
               </div>
             </div>
-            <RightPanel session={session} transactions={transactions} summary={summary} />
+            <RightPanel
+              session={session}
+              transactions={transactions}
+              summary={summary}
+              onSeeAll={() => setShowTransactions(true)}
+            />
           </div>
         </motion.section>
       </div>
+      {showTransactions && (
+        <TransactionsDialog
+          transactions={transactions}
+          deletingId={deletingId}
+          onDelete={removeTransaction}
+          onClose={() => setShowTransactions(false)}
+        />
+      )}
     </main>
   );
 }

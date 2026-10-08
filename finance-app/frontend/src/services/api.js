@@ -41,4 +41,8 @@ export async function createTransaction(transaction) {
   return data;
 }
 
+export async function deleteTransaction(id) {
+  await api.delete(`/transactions/${encodeURIComponent(id)}`);
+}
+
 export default api;

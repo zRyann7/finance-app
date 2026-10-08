@@ -11,7 +11,7 @@ const formatDate = (value) => {
   return new Intl.DateTimeFormat("pt-BR").format(new Date(year, month - 1, day));
 };
 
-export default function RightPanel({ session, transactions, summary }) {
+export default function RightPanel({ session, transactions, summary, onSeeAll }) {
   const latest = transactions[0];
   const name = session?.user?.email?.split("@")[0] || "Usuário";
 
@@ -41,7 +41,7 @@ export default function RightPanel({ session, transactions, summary }) {
             </div>
           )}
         </article>
-        <button className="see-all">Ver todas as transações <ArrowRight size={14} /></button>
+        <button className="see-all" onClick={onSeeAll}>Ver todas as transações <ArrowRight size={14} /></button>
       </section>
     </aside>
   );

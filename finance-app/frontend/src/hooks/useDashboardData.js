@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { getGoals, getSummary, getTransactions } from "../services/api";
+import { deleteTransaction, getGoals, getSummary, getTransactions } from "../services/api";
 
 function buildMonthlyChart(transactions) {
   const formatter = new Intl.DateTimeFormat("pt-BR", { month: "short" });
@@ -37,6 +37,7 @@ export function useDashboardData({ session }) {
   const [transactions, setTransactions] = useState([]);
   const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -68,12 +69,35 @@ export function useDashboardData({ session }) {
     };
   }, [month, session]);
 
+  async function removeTransaction(id) {
+    setDeletingId(id);
+    setError("");
+
+    try {
+      await deleteTransaction(id);
+      const [summaryData, transactionData] = await Promise.all([
+        getSummary(month),
+        getTransactions(),
+      ]);
+      setSummary(summaryData);
+      setTransactions(transactionData);
+    } catch (requestError) {
+      const message = requestError.response?.data?.error || "Não foi possível excluir a transação.";
+      setError(message);
+      throw requestError;
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   return {
     summary: summary || { income: 0, expenses: 0, balance: 0, transactions_count: 0 },
     transactions,
     goals,
     chartData: buildMonthlyChart(transactions),
     loading,
+    deletingId,
     error,
+    removeTransaction,
   };
 }
