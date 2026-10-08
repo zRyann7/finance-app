@@ -32,7 +32,10 @@ function buildMonthlyChart(transactions) {
 }
 
 export function useDashboardData({ session }) {
-  const month = useMemo(() => new Date().toISOString().slice(0, 7), []);
+  const month = useMemo(() => {
+    const current = new Date();
+    return `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, "0")}`;
+  }, []);
   const [summary, setSummary] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [goals, setGoals] = useState([]);
@@ -46,21 +49,18 @@ export function useDashboardData({ session }) {
     let active = true;
     setLoading(true);
 
-    Promise.allSettled([getSummary(month), getTransactions(), getGoals()])
+    Promise.allSettled([getSummary(month), getTransactions({ limit: 500 }), getGoals()])
       .then(([summaryResult, transactionResult, goalResult]) => {
         if (!active) return;
 
-        if (summaryResult.status === "rejected") throw summaryResult.reason;
-        if (transactionResult.status === "rejected") throw transactionResult.reason;
-
-        setSummary(summaryResult.value);
-        setTransactions(transactionResult.value);
+        setSummary(summaryResult.status === "fulfilled" ? summaryResult.value : null);
+        setTransactions(transactionResult.status === "fulfilled" ? transactionResult.value : []);
         setGoals(goalResult.status === "fulfilled" ? goalResult.value : []);
-        setError(goalResult.status === "rejected" ? "Resumo carregado, mas as metas estão indisponíveis." : "");
-      })
-      .catch((requestError) => {
-        if (!active) return;
-        setError(requestError.response?.data?.error || "Não foi possível carregar seus dados.");
+        const failures = [summaryResult, transactionResult, goalResult]
+          .filter((result) => result.status === "rejected")
+          .map((result) => result.reason?.response?.data?.error)
+          .filter(Boolean);
+        setError(failures[0] || (failures.length ? "Parte dos seus dados não pôde ser carregada." : ""));
       })
       .finally(() => active && setLoading(false));
 
@@ -91,7 +91,7 @@ export function useDashboardData({ session }) {
   }
 
   return {
-    summary: summary || { income: 0, expenses: 0, balance: 0, transactions_count: 0 },
+    summary,
     transactions,
     goals,
     chartData: buildMonthlyChart(transactions),

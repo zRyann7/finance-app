@@ -14,8 +14,8 @@ export default function OtherSavings({ summary, chartData }) {
       <article className="savings-card">
         <div>
           <p>Saldo do mês atual</p>
-          <strong>{formatMoney(summary.balance)}</strong>
-          <span className="positive-rate">{summary.transactions_count} movimentações</span>
+          <strong>{summary ? formatMoney(summary.balance) : "—"}</strong>
+          <span className="positive-rate">{summary ? `${summary.transactions_count} movimentações` : "Dados indisponíveis"}</span>
         </div>
         <div className="savings-bars" aria-label="Illustrative savings growth chart">
           {bars.map((height, index) => <i key={`${chartData[index]?.key}-${index}`} style={{ height }}><span>{chartData[index]?.month}</span></i>)}
