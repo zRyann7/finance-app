@@ -7,6 +7,7 @@ const authRoutes = require("./routes/authRoutes");
 const transactionRoutes = require("./routes/transactionRoutes");
 const summaryRoutes = require("./routes/summaryRoutes");
 const goalRoutes = require("./routes/goalRoutes");
+const profileRoutes = require("./routes/profileRoutes");
 const { apiLimiter } = require("./middlewares/rateLimiters");
 
 const app = express();
@@ -35,6 +36,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/summary", summaryRoutes);
 app.use("/api/goals", goalRoutes);
+app.use("/api/profile", profileRoutes);
 
 app.use((err, req, res, next) => {
   console.error("Erro interno:", err.message);

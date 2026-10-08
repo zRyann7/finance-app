@@ -4,6 +4,7 @@ const assert = require("node:assert/strict");
 const {
   getAuthErrorResponse,
   getCurrentUser,
+  getRegistrationErrorResponse,
   getUserDisplayName,
 } = require("../src/controllers/authController");
 
@@ -17,6 +18,17 @@ test("diferencia email não confirmado de credenciais inválidas", () => {
     status: 401,
     message: "Email ou senha inválidos.",
   });
+});
+
+test("traduz erros de cadastro sem expor detalhes internos", () => {
+  assert.deepEqual(
+    getRegistrationErrorResponse({ code: "user_already_exists" }),
+    { status: 409, message: "Já existe uma conta com este email." },
+  );
+  assert.deepEqual(
+    getRegistrationErrorResponse({ message: "Database error saving new user" }),
+    { status: 409, message: "Este nome de usuário já está em uso." },
+  );
 });
 
 test("informa bloqueio temporário por excesso de tentativas", () => {

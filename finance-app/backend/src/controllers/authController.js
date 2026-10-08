@@ -1,6 +1,12 @@
 const {
   createSupabaseClient,
 } = require("../config/supabase");
+const {
+  isValidEmail,
+  isValidPassword,
+  isValidUsername,
+  normalizeUsername,
+} = require("../utils/validation");
 
 function getUserDisplayName(user) {
   const metadata = user?.user_metadata || {};
@@ -58,6 +64,28 @@ function getAuthErrorResponse(error) {
   };
 }
 
+function getRegistrationErrorResponse(error) {
+  const duplicateAccountCodes = ["user_already_exists", "email_exists"];
+
+  if (duplicateAccountCodes.includes(error?.code)) {
+    return { status: 409, message: "Já existe uma conta com este email." };
+  }
+
+  if (error?.code === "weak_password") {
+    return { status: 400, message: "A senha não atende aos requisitos de segurança." };
+  }
+
+  if (/database error saving new user|duplicate key|username/i.test(error?.message || "")) {
+    return { status: 409, message: "Este nome de usuário já está em uso." };
+  }
+
+  if (error?.name === "AuthRetryableFetchError") {
+    return { status: 503, message: "O serviço de cadastro está indisponível." };
+  }
+
+  return { status: 400, message: "Não foi possível criar a conta." };
+}
+
 async function login(req, res) {
   const { email, password } = req.body || {};
 
@@ -103,13 +131,93 @@ async function login(req, res) {
   });
 }
 
+async function register(req, res) {
+  const { email, password, confirmPassword } = req.body || {};
+  const username = normalizeUsername(req.body?.username);
+
+  if (!isValidUsername(username)) {
+    return res.status(400).json({
+      error: "O username deve ter de 3 a 20 caracteres: letras, números ou underscore.",
+    });
+  }
+
+  if (!isValidEmail(email)) {
+    return res.status(400).json({ error: "Informe um email válido." });
+  }
+
+  if (!isValidPassword(password)) {
+    return res.status(400).json({
+      error: "A senha deve ter entre 8 e 72 caracteres.",
+    });
+  }
+
+  if (password !== confirmPassword) {
+    return res.status(400).json({ error: "As senhas não coincidem." });
+  }
+
+  const supabase = createSupabaseClient();
+  const { data: usernameAvailable, error: availabilityError } =
+    await supabase.rpc("is_username_available", {
+      candidate_username: username,
+    });
+
+  if (availabilityError) {
+    console.error("Erro ao validar username:", availabilityError.message);
+    return res.status(503).json({
+      error: "O cadastro de perfis ainda não está disponível. Aplique a migração do Supabase.",
+    });
+  }
+
+  if (!usernameAvailable) {
+    return res.status(409).json({ error: "Este nome de usuário já está em uso." });
+  }
+
+  const { data, error } = await supabase.auth.signUp({
+    email: email.trim().toLowerCase(),
+    password,
+    options: {
+      data: { username },
+    },
+  });
+
+  if (error) {
+    const response = getRegistrationErrorResponse(error);
+    console.warn("Falha no cadastro Supabase Auth:", {
+      code: error.code || "unknown",
+      name: error.name || "unknown",
+      status: error.status || response.status,
+    });
+    return res.status(response.status).json({ error: response.message });
+  }
+
+  const requiresEmailConfirmation = !data.session;
+
+  return res.status(201).json({
+    requires_email_confirmation: requiresEmailConfirmation,
+    message: requiresEmailConfirmation
+      ? "Conta criada. Confirme seu email antes de entrar."
+      : "Conta criada com sucesso.",
+    ...(data.session && {
+      access_token: data.session.access_token,
+      refresh_token: data.session.refresh_token,
+      expires_in: data.session.expires_in,
+      user: {
+        ...getPublicUser(data.user),
+        username,
+      },
+    }),
+  });
+}
+
 function getCurrentUser(req, res) {
   return res.json(getPublicUser(req.user));
 }
 
 module.exports = {
   login,
+  register,
   getAuthErrorResponse,
+  getRegistrationErrorResponse,
   getCurrentUser,
   getUserDisplayName,
 };

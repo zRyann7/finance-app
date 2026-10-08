@@ -25,4 +25,14 @@ const loginLimiter = rateLimit({
   },
 });
 
-module.exports = { apiLimiter, loginLimiter };
+const registrationLimiter = rateLimit({
+  ...commonOptions,
+  windowMs: 60 * 60 * 1000,
+  limit: 5,
+  skipSuccessfulRequests: true,
+  message: {
+    error: "Muitas tentativas de cadastro. Tente novamente mais tarde.",
+  },
+});
+
+module.exports = { apiLimiter, loginLimiter, registrationLimiter };
