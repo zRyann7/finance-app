@@ -7,8 +7,19 @@ const authRoutes = require("./routes/authRoutes");
 const transactionRoutes = require("./routes/transactionRoutes");
 const summaryRoutes = require("./routes/summaryRoutes");
 const goalRoutes = require("./routes/goalRoutes");
+const { apiLimiter } = require("./middlewares/rateLimiters");
 
 const app = express();
+
+if (process.env.NODE_ENV === "production") {
+  const trustProxyHops = process.env.TRUST_PROXY_HOPS || "1";
+
+  if (!/^\d+$/.test(trustProxyHops)) {
+    throw new Error("TRUST_PROXY_HOPS deve ser um número inteiro não negativo.");
+  }
+
+  app.set("trust proxy", Number(trustProxyHops));
+}
 
 app.use(cors());
 app.use(express.json({ limit: "16kb" }));
@@ -19,6 +30,7 @@ app.get("/", (req, res) => {
   });
 });
 
+app.use("/api", apiLimiter);
 app.use("/api/auth", authRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/summary", summaryRoutes);
