@@ -82,7 +82,42 @@ async function createTransaction(req, res) {
   return res.status(201).json(data);
 }
 
+async function deleteTransaction(req, res) {
+  const { id } = req.params;
+
+  if (typeof id !== "string" || !/^[a-zA-Z0-9-]{1,100}$/.test(id)) {
+    return res.status(400).json({
+      error: "Identificador de transação inválido.",
+    });
+  }
+
+  const { data, error } = await req.supabase
+    .from("transactions")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", req.user.id)
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    console.error("Erro ao excluir transação:", error.message);
+
+    return res.status(500).json({
+      error: "Erro ao excluir transação.",
+    });
+  }
+
+  if (!data) {
+    return res.status(404).json({
+      error: "Transação não encontrada.",
+    });
+  }
+
+  return res.status(204).send();
+}
+
 module.exports = {
   listTransactions,
   createTransaction,
+  deleteTransaction,
 };
