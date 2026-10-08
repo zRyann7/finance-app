@@ -2,6 +2,29 @@ const {
   createSupabaseClient,
 } = require("../config/supabase");
 
+function getUserDisplayName(user) {
+  const metadata = user?.user_metadata || {};
+  const candidates = [
+    metadata.full_name,
+    metadata.name,
+    metadata.display_name,
+    metadata.nome,
+  ];
+  const displayName = candidates.find(
+    (candidate) => typeof candidate === "string" && candidate.trim(),
+  );
+
+  return displayName ? displayName.trim().slice(0, 80) : null;
+}
+
+function getPublicUser(user) {
+  return {
+    id: user.id,
+    email: user.email,
+    name: getUserDisplayName(user),
+  };
+}
+
 function getAuthErrorResponse(error) {
   if (error?.name === "AuthRetryableFetchError") {
     return {
@@ -76,11 +99,17 @@ async function login(req, res) {
     access_token: data.session.access_token,
     refresh_token: data.session.refresh_token,
     expires_in: data.session.expires_in,
-    user: {
-      id: data.user.id,
-      email: data.user.email,
-    },
+    user: getPublicUser(data.user),
   });
 }
 
-module.exports = { login, getAuthErrorResponse };
+function getCurrentUser(req, res) {
+  return res.json(getPublicUser(req.user));
+}
+
+module.exports = {
+  login,
+  getAuthErrorResponse,
+  getCurrentUser,
+  getUserDisplayName,
+};

@@ -13,7 +13,7 @@ const formatDate = (value) => {
 
 export default function RightPanel({ session, transactions, summary, onSeeAll }) {
   const latest = transactions[0];
-  const name = session?.user?.email?.split("@")[0] || "Usuário";
+  const name = session?.user?.name || "Usuário";
 
   return (
     <aside className="right-panel">

@@ -21,6 +21,11 @@ export async function login(credentials) {
   return data;
 }
 
+export async function getCurrentUser() {
+  const { data } = await api.get("/auth/me");
+  return data;
+}
+
 export async function getSummary(month) {
   const { data } = await api.get("/summary", { params: { month } });
   return data;
