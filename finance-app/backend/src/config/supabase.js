@@ -27,4 +27,18 @@ function createSupabaseClient(accessToken) {
   });
 }
 
-module.exports = { createSupabaseClient };
+async function revokeSession(accessToken) {
+  const response = await fetch(`${url}/auth/v1/logout?scope=local`, {
+    method: "POST",
+    headers: {
+      apikey: key,
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!response.ok && response.status !== 401) {
+    throw new Error(`Supabase Auth respondeu com status ${response.status}.`);
+  }
+}
+
+module.exports = { createSupabaseClient, revokeSession };

@@ -1,5 +1,6 @@
 const {
   createSupabaseClient,
+  revokeSession,
 } = require("../config/supabase");
 const {
   isValidEmail,
@@ -209,6 +210,36 @@ async function register(req, res) {
   });
 }
 
+async function refreshSession(req, res) {
+  const { refreshToken } = req.body || {};
+  if (typeof refreshToken !== "string" || !refreshToken || refreshToken.length > 2048) {
+    return res.status(400).json({ error: "Refresh token inválido." });
+  }
+
+  const supabase = createSupabaseClient();
+  const { data, error } = await supabase.auth.refreshSession({ refresh_token: refreshToken });
+  if (error || !data.session) {
+    return res.status(401).json({ error: "Sua sessão expirou. Entre novamente." });
+  }
+
+  return res.json({
+    access_token: data.session.access_token,
+    refresh_token: data.session.refresh_token,
+    expires_in: data.session.expires_in,
+    user: getPublicUser(data.user),
+  });
+}
+
+async function logout(req, res) {
+  try {
+    await revokeSession(req.accessToken);
+    return res.status(204).send();
+  } catch (error) {
+    console.error("Erro ao encerrar sessão:", error.message);
+    return res.status(503).json({ error: "Não foi possível encerrar a sessão no momento." });
+  }
+}
+
 function getCurrentUser(req, res) {
   return res.json(getPublicUser(req.user));
 }
@@ -216,6 +247,8 @@ function getCurrentUser(req, res) {
 module.exports = {
   login,
   register,
+  refreshSession,
+  logout,
   getAuthErrorResponse,
   getRegistrationErrorResponse,
   getCurrentUser,

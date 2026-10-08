@@ -27,6 +27,7 @@ async function authMiddleware(req, res, next) {
 
   req.user = data.user;
   req.supabase = supabase;
+  req.accessToken = token;
 
   next();
 }

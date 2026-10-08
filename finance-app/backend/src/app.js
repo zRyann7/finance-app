@@ -2,6 +2,7 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
+const { createCorsOptions } = require("./config/cors");
 
 const authRoutes = require("./routes/authRoutes");
 const transactionRoutes = require("./routes/transactionRoutes");
@@ -23,7 +24,7 @@ if (process.env.NODE_ENV === "production") {
   app.set("trust proxy", Number(trustProxyHops));
 }
 
-app.use(cors());
+app.use(cors(createCorsOptions()));
 app.use(express.json({ limit: "16kb" }));
 
 app.get("/", (req, res) => {
@@ -43,8 +44,8 @@ app.use("/api/bills", billRoutes);
 app.use((err, req, res, next) => {
   console.error("Erro interno:", err.message);
 
-  res.status(500).json({
-    error: "Erro interno do servidor.",
+  res.status(err.status || 500).json({
+    error: err.status === 403 ? err.message : "Erro interno do servidor.",
   });
 });
 
