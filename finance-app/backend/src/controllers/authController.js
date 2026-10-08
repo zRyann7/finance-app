@@ -3,6 +3,13 @@ const {
 } = require("../config/supabase");
 
 function getAuthErrorResponse(error) {
+  if (error?.name === "AuthRetryableFetchError") {
+    return {
+      status: 503,
+      message: "Não foi possível conectar ao serviço de autenticação.",
+    };
+  }
+
   const responses = {
     email_not_confirmed: {
       status: 403,
@@ -55,12 +62,13 @@ async function login(req, res) {
 
     console.warn("Falha no Supabase Auth:", {
       code: error.code || "unknown",
+      name: error.name || "unknown",
       status: error.status || response.status,
     });
 
     return res.status(response.status).json({
       error: response.message,
-      auth_code: error.code || "unknown",
+      auth_code: error.code || error.name || "unknown",
     });
   }
 

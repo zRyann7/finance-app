@@ -21,3 +21,10 @@ test("informa bloqueio temporário por excesso de tentativas", () => {
     message: "Muitas tentativas de login. Aguarde alguns minutos.",
   });
 });
+
+test("não classifica falha de conexão como credencial inválida", () => {
+  assert.deepEqual(getAuthErrorResponse({ name: "AuthRetryableFetchError" }), {
+    status: 503,
+    message: "Não foi possível conectar ao serviço de autenticação.",
+  });
+});
