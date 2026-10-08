@@ -2,6 +2,32 @@ const {
   createSupabaseClient,
 } = require("../config/supabase");
 
+function getAuthErrorResponse(error) {
+  const responses = {
+    email_not_confirmed: {
+      status: 403,
+      message: "Confirme seu email antes de entrar.",
+    },
+    user_banned: {
+      status: 403,
+      message: "Esta conta está temporariamente indisponível.",
+    },
+    over_request_rate_limit: {
+      status: 429,
+      message: "Muitas tentativas de login. Aguarde alguns minutos.",
+    },
+    request_timeout: {
+      status: 503,
+      message: "O serviço de autenticação demorou para responder.",
+    },
+  };
+
+  return responses[error?.code] || {
+    status: 401,
+    message: "Email ou senha inválidos.",
+  };
+}
+
 async function login(req, res) {
   const { email, password } = req.body || {};
 
@@ -20,13 +46,21 @@ async function login(req, res) {
 
   const { data, error } =
     await supabase.auth.signInWithPassword({
-      email,
+      email: email.trim(),
       password,
     });
 
   if (error) {
-    return res.status(401).json({
-      error: "Email ou senha inválidos.",
+    const response = getAuthErrorResponse(error);
+
+    console.warn("Falha no Supabase Auth:", {
+      code: error.code || "unknown",
+      status: error.status || response.status,
+    });
+
+    return res.status(response.status).json({
+      error: response.message,
+      auth_code: error.code || "unknown",
     });
   }
 
@@ -41,4 +75,4 @@ async function login(req, res) {
   });
 }
 
-module.exports = { login };
+module.exports = { login, getAuthErrorResponse };
