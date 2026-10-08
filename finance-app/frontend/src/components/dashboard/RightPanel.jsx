@@ -11,20 +11,22 @@ const formatDate = (value) => {
   return new Intl.DateTimeFormat("pt-BR").format(new Date(year, month - 1, day));
 };
 
-export default function RightPanel({ session, transactions, summary, onSeeAll }) {
+export default function RightPanel({ profile, transactions, summary, onSeeAll }) {
   const latest = transactions[0];
-  const name = session?.user?.name || "Usuário";
+  const name = profile?.username || "Carregando…";
 
   return (
     <aside className="right-panel">
       <section className="profile-card">
-        <div className="profile-avatar"><UserRound size={27} strokeWidth={1.35} /></div>
+        <div className="profile-avatar">
+          {profile?.avatar_url ? <img src={profile.avatar_url} alt="" /> : <UserRound size={27} strokeWidth={1.35} />}
+        </div>
         <small>Conta pessoal</small>
         <h2>{name}</h2>
       </section>
 
       <QuickActions />
-      <BankCard balance={summary.balance} />
+      <BankCard balance={summary?.balance} />
 
       <section className="last-transaction" aria-labelledby="last-transaction-title">
         <h2 id="last-transaction-title">Última transação</h2>

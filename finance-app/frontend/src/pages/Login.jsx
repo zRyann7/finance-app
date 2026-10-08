@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { ArrowRight, LockKeyhole, Mail } from "lucide-react";
+import { Link, useNavigate } from "react-router";
 import BrandMark from "../components/ui/BrandMark";
 import { login } from "../services/api";
-import { saveSession } from "../services/session";
 
 export default function Login({ onAuthenticated }) {
+  const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -16,8 +17,8 @@ export default function Login({ onAuthenticated }) {
 
     try {
       const session = await login(form);
-      saveSession(session);
       onAuthenticated(session);
+      navigate("/dashboard", { replace: true });
     } catch (requestError) {
       setError(requestError.response?.data?.error || "Não foi possível entrar. Verifique se o backend está ativo.");
     } finally {
@@ -46,6 +47,7 @@ export default function Login({ onAuthenticated }) {
           {error && <div className="login-error" role="alert">{error}</div>}
           <button className="login-submit" disabled={loading}>{loading ? "Entrando…" : "Entrar"}<ArrowRight size={16} /></button>
         </form>
+        <p className="auth-switch">Ainda não tem uma conta? <Link to="/register">Criar conta</Link></p>
       </section>
     </main>
   );

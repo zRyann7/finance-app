@@ -20,14 +20,14 @@ function normalizeGoal(goal) {
   };
 }
 
-export default function Goals({ goals }) {
+export default function Goals({ goals, onAdd }) {
   const visibleGoals = goals.slice(0, 2).map(normalizeGoal);
 
   return (
     <section className="goals-section" aria-labelledby="goals-title">
       <div className="lower-heading">
         <h2 id="goals-title">Metas</h2>
-        <button>Adicionar meta <span>+</span></button>
+        <button onClick={onAdd}>Adicionar meta <span>+</span></button>
       </div>
       <div className={`goal-grid ${visibleGoals.length === 0 ? "is-empty" : ""}`}>
         {visibleGoals.length === 0 && (

@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
-import Sidebar from "../components/layout/Sidebar";
+import { useNavigate, useOutletContext } from "react-router";
 import DashboardHeader from "../components/dashboard/DashboardHeader";
 import StatisticChart from "../components/dashboard/StatisticChart";
 import Goals from "../components/dashboard/Goals";
@@ -9,59 +8,28 @@ import RightPanel from "../components/dashboard/RightPanel";
 import TransactionsDialog from "../components/dashboard/TransactionsDialog";
 import { useDashboardData } from "../hooks/useDashboardData";
 
-export default function Dashboard({ session, onLogout }) {
+export default function Dashboard() {
+  const navigate = useNavigate();
+  const { session, profile } = useOutletContext();
   const [showTransactions, setShowTransactions] = useState(false);
-  const {
-    summary,
-    transactions,
-    goals,
-    chartData,
-    loading,
-    deletingId,
-    error,
-    removeTransaction,
-  } = useDashboardData({ session });
+  const { summary, transactions, goals, chartData, loading, deletingId, error, removeTransaction } = useDashboardData({ session });
 
   return (
-    <main className="app-scene">
-      <div className="ambient-shape ambient-left" />
-      <div className="ambient-shape ambient-right" />
-      <div className="dashboard-stage">
-        <Sidebar onLogout={onLogout} />
-        <motion.section
-          className="dashboard-shell"
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, ease: "easeOut" }}
-        >
-          <div className="orange-ambient" />
-          <DashboardHeader summary={summary} loading={loading} />
-          {error && <div className="data-error" role="status">{error}</div>}
-          <div className="dashboard-content">
-            <div className="main-column">
-              <StatisticChart data={chartData} />
-              <div className="lower-grid">
-                <Goals goals={goals} />
-                <OtherSavings summary={summary} chartData={chartData} />
-              </div>
-            </div>
-            <RightPanel
-              session={session}
-              transactions={transactions}
-              summary={summary}
-              onSeeAll={() => setShowTransactions(true)}
-            />
+    <>
+      <DashboardHeader summary={summary} loading={loading} />
+      {error && <div className="data-error" role="alert">{error}</div>}
+      {!loading && !error && summary?.transactions_count === 0 && <div className="data-empty" role="status">Nenhuma movimentação no mês atual.</div>}
+      <div className="dashboard-content">
+        <div className="main-column">
+          <StatisticChart data={chartData} onShowTransactions={() => navigate("/transactions")} />
+          <div className="lower-grid">
+            <Goals goals={goals} onAdd={() => navigate("/goals?new=1")} />
+            <OtherSavings summary={summary} chartData={chartData} />
           </div>
-        </motion.section>
+        </div>
+        <RightPanel profile={profile} transactions={transactions} summary={summary} onSeeAll={() => setShowTransactions(true)} />
       </div>
-      {showTransactions && (
-        <TransactionsDialog
-          transactions={transactions}
-          deletingId={deletingId}
-          onDelete={removeTransaction}
-          onClose={() => setShowTransactions(false)}
-        />
-      )}
-    </main>
+      {showTransactions && <TransactionsDialog transactions={transactions} deletingId={deletingId} onDelete={removeTransaction} onClose={() => setShowTransactions(false)} />}
+    </>
   );
 }

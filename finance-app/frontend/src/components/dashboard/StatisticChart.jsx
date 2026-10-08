@@ -30,14 +30,14 @@ function ChartTooltip({ active, payload, label }) {
   );
 }
 
-export default function StatisticChart({ data }) {
+export default function StatisticChart({ data, onShowTransactions }) {
   const highlighted = data[2] || { month: "", income: 0 };
 
   return (
     <section className="statistics-section" aria-labelledby="statistic-title">
       <div className="section-heading">
         <h2 id="statistic-title">Estatísticas</h2>
-        <button className="filter-button">Todas as transações <ChevronDown size={12} /></button>
+        <button className="filter-button" onClick={onShowTransactions}>Todas as transações <ChevronDown size={12} /></button>
       </div>
 
       <div className="chart-card">
