@@ -6,6 +6,7 @@ const cors = require("cors");
 const authRoutes = require("./routes/authRoutes");
 const transactionRoutes = require("./routes/transactionRoutes");
 const summaryRoutes = require("./routes/summaryRoutes");
+const goalRoutes = require("./routes/goalRoutes");
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/summary", summaryRoutes);
+app.use("/api/goals", goalRoutes);
 
 app.use((err, req, res, next) => {
   console.error("Erro interno:", err.message);
