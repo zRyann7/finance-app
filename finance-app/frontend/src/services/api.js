@@ -31,6 +31,11 @@ export async function getTransactions() {
   return data;
 }
 
+export async function getGoals() {
+  const { data } = await api.get("/goals");
+  return data;
+}
+
 export async function createTransaction(transaction) {
   const { data } = await api.post("/transactions", transaction);
   return data;

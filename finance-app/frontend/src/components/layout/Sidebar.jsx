@@ -10,16 +10,16 @@ import BrandMark from "../ui/BrandMark";
 
 const links = [
   [LayoutDashboard, "Dashboard"],
-  [WalletCards, "Wallet"],
-  [FileText, "Transactions"],
-  [CreditCard, "Cards"],
-  [Settings, "Settings"],
+  [WalletCards, "Carteira"],
+  [FileText, "Transações"],
+  [CreditCard, "Cartões"],
+  [Settings, "Configurações"],
 ];
 
 export default function Sidebar({ onLogout }) {
   return (
-    <aside className="sidebar" aria-label="Main navigation">
-      <button className="sidebar-brand" aria-label="Finance home">
+    <aside className="sidebar" aria-label="Navegação principal">
+      <button className="sidebar-brand" aria-label="Início financeiro">
         <BrandMark />
       </button>
 
@@ -36,7 +36,7 @@ export default function Sidebar({ onLogout }) {
         ))}
       </nav>
 
-      <button className="sidebar-button sidebar-logout" aria-label="Log out" data-tooltip="Log out" onClick={onLogout}>
+      <button className="sidebar-button sidebar-logout" aria-label="Sair" data-tooltip="Sair" onClick={onLogout}>
         <LogOut size={17} strokeWidth={1.7} />
       </button>
     </aside>

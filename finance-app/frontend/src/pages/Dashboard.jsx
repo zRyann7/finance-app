@@ -7,8 +7,8 @@ import OtherSavings from "../components/dashboard/OtherSavings";
 import RightPanel from "../components/dashboard/RightPanel";
 import { useDashboardData } from "../hooks/useDashboardData";
 
-export default function Dashboard({ session, demo, onLogout }) {
-  const { summary, transactions, loading, error } = useDashboardData({ session, demo });
+export default function Dashboard({ session, onLogout }) {
+  const { summary, transactions, goals, chartData, loading, error } = useDashboardData({ session });
 
   return (
     <main className="app-scene">
@@ -23,17 +23,17 @@ export default function Dashboard({ session, demo, onLogout }) {
           transition={{ duration: 0.45, ease: "easeOut" }}
         >
           <div className="orange-ambient" />
-          <DashboardHeader summary={summary} demo={demo} loading={loading} />
+          <DashboardHeader summary={summary} loading={loading} />
           {error && <div className="data-error" role="status">{error}</div>}
           <div className="dashboard-content">
             <div className="main-column">
-              <StatisticChart />
+              <StatisticChart data={chartData} />
               <div className="lower-grid">
-                <Goals />
-                <OtherSavings />
+                <Goals goals={goals} />
+                <OtherSavings summary={summary} chartData={chartData} />
               </div>
             </div>
-            <RightPanel session={session} demo={demo} transactions={transactions} />
+            <RightPanel session={session} transactions={transactions} summary={summary} />
           </div>
         </motion.section>
       </div>

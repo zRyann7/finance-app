@@ -10,51 +10,51 @@ import {
   YAxis,
 } from "recharts";
 
-const chartData = [
-  { month: "Jan", net: 42, compare: 35, target: 39 },
-  { month: "Feb", net: 24, compare: 27, target: 31 },
-  { month: "Mar", net: 66, compare: 47, target: 50 },
-  { month: "Apr", net: 27, compare: 70, target: 47 },
-  { month: "May", net: 70, compare: 45, target: 53 },
-  { month: "Jun", net: 47, compare: 43, target: 49 },
-];
+const formatMoney = (value) =>
+  new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    maximumFractionDigits: 2,
+  }).format(Number(value) || 0);
 
 function ChartTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
-  const value = payload.find((entry) => entry.dataKey === "net")?.value ?? payload[0].value;
+  const value = payload.find((entry) => entry.dataKey === "income")?.value ?? payload[0].value;
 
   return (
     <div className="chart-tooltip">
       <span className="tooltip-check">✓</span>
       <span>{label}</span>
-      <strong>${(value * 9.94).toFixed(2)}</strong>
+      <strong>{formatMoney(value)}</strong>
     </div>
   );
 }
 
-export default function StatisticChart() {
+export default function StatisticChart({ data }) {
+  const highlighted = data[2] || { month: "", income: 0 };
+
   return (
     <section className="statistics-section" aria-labelledby="statistic-title">
       <div className="section-heading">
-        <h2 id="statistic-title">Statistic</h2>
-        <button className="filter-button">All Transaction <ChevronDown size={12} /></button>
+        <h2 id="statistic-title">Estatísticas</h2>
+        <button className="filter-button">Todas as transações <ChevronDown size={12} /></button>
       </div>
 
       <div className="chart-card">
         <div className="chart-card-glow" />
         <div className="chart-copy">
-          <h3>Top Contributor</h3>
-          <p>Monthly flow overview · illustrative data</p>
+          <h3>Fluxo financeiro</h3>
+          <p>Últimos seis meses · dados das suas transações</p>
         </div>
         <div className="chart-legend" aria-label="Chart legend">
-          <span><i className="dot dot-teal" />Expense</span>
-          <span><i className="dot dot-green" />Target Compare</span>
-          <span><i className="dot dot-orange" />Net Sales</span>
+          <span><i className="dot dot-teal" />Despesas</span>
+          <span><i className="dot dot-green" />Saldo</span>
+          <span><i className="dot dot-orange" />Receitas</span>
         </div>
 
         <div className="chart-wrap">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top: 34, right: 22, left: 22, bottom: 0 }}>
+            <LineChart data={data} margin={{ top: 34, right: 22, left: 22, bottom: 0 }}>
               <CartesianGrid vertical={false} horizontal={false} />
               <XAxis
                 dataKey="month"
@@ -63,11 +63,11 @@ export default function StatisticChart() {
                 tick={{ fill: "#8d8587", fontSize: 10 }}
                 dy={9}
               />
-              <YAxis hide domain={[0, 110]} />
+              <YAxis hide domain={[0, "auto"]} />
               <Tooltip content={<ChartTooltip />} cursor={{ stroke: "rgba(237,120,46,.22)", strokeDasharray: "2 5" }} />
               <Line
                 type="monotone"
-                dataKey="compare"
+                dataKey="expenses"
                 stroke="rgba(233,227,222,.48)"
                 strokeWidth={2}
                 dot={false}
@@ -75,7 +75,7 @@ export default function StatisticChart() {
               />
               <Line
                 type="monotone"
-                dataKey="target"
+                dataKey="balance"
                 stroke="rgba(105,175,139,.12)"
                 strokeWidth={1}
                 strokeDasharray="4 8"
@@ -84,16 +84,16 @@ export default function StatisticChart() {
               />
               <Line
                 type="monotone"
-                dataKey="net"
+                dataKey="income"
                 stroke="#e67535"
                 strokeWidth={2.3}
                 dot={false}
                 activeDot={{ r: 4, fill: "#f4a06b", stroke: "rgba(255,255,255,.65)", strokeWidth: 1 }}
               />
-              <ReferenceDot x="Mar" y={66} r={4} fill="#fff3e8" stroke="#ed782e" strokeWidth={2} />
+              <ReferenceDot x={highlighted.month} y={highlighted.income} r={4} fill="#fff3e8" stroke="#ed782e" strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
-          <div className="pinned-tooltip"><span>✓</span><strong>$645.89</strong></div>
+          <div className="pinned-tooltip"><span>✓</span><strong>{formatMoney(highlighted.income)}</strong></div>
           <div className="pinned-guide" />
         </div>
       </div>

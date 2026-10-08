@@ -3,39 +3,45 @@ import QuickActions from "./QuickActions";
 import BankCard from "./BankCard";
 
 const formatMoney = (value) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(Number(value) || 0);
+  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(value) || 0);
 
-export default function RightPanel({ session, demo, transactions }) {
+const formatDate = (value) => {
+  if (!value) return "";
+  const [year, month, day] = value.slice(0, 10).split("-").map(Number);
+  return new Intl.DateTimeFormat("pt-BR").format(new Date(year, month - 1, day));
+};
+
+export default function RightPanel({ session, transactions, summary }) {
   const latest = transactions[0];
-  const name = demo ? "Rizasyah Somadudin" : (session?.user?.email?.split("@")[0] || "Finance User");
+  const name = session?.user?.email?.split("@")[0] || "Usuário";
 
   return (
     <aside className="right-panel">
       <section className="profile-card">
         <div className="profile-avatar"><UserRound size={27} strokeWidth={1.35} /></div>
-        <small>{demo ? "Team Card · Demo" : "Personal Account"}</small>
+        <small>Conta pessoal</small>
         <h2>{name}</h2>
       </section>
 
       <QuickActions />
-      <BankCard />
+      <BankCard balance={summary.balance} />
 
       <section className="last-transaction" aria-labelledby="last-transaction-title">
-        <h2 id="last-transaction-title">Last Transaction</h2>
+        <h2 id="last-transaction-title">Última transação</h2>
         <article className="transaction-row">
           <div className="transaction-avatar">{latest?.description?.slice(0, 1)?.toUpperCase() || "–"}</div>
           <div className="transaction-copy">
-            <strong>{latest?.description || "No transactions yet"}</strong>
-            <small>{latest?.date || "Your latest item will appear here"}</small>
+            <strong>{latest?.description || "Nenhuma transação"}</strong>
+            <small>{latest ? formatDate(latest.date) : "Suas movimentações aparecerão aqui"}</small>
           </div>
           {latest && (
             <div className={`transaction-value ${latest.type}`}>
               {latest.type === "income" ? "+" : "−"}{formatMoney(latest.amount)}
-              <small>{latest.type === "income" ? "Income" : "Expense"}</small>
+              <small>{latest.type === "income" ? "Receita" : "Despesa"}</small>
             </div>
           )}
         </article>
-        <button className="see-all">See all transactions <ArrowRight size={14} /></button>
+        <button className="see-all">Ver todas as transações <ArrowRight size={14} /></button>
       </section>
     </aside>
   );

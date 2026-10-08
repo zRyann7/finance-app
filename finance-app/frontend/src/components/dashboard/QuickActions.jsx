@@ -1,10 +1,10 @@
 import { ArrowDownLeft, ArrowUpRight, ReceiptText, WalletCards } from "lucide-react";
 
 const actions = [
-  [ArrowUpRight, "Transfer"],
-  [ArrowDownLeft, "Receive"],
-  [ReceiptText, "Bill"],
-  [WalletCards, "Top Up"],
+  [ArrowUpRight, "Transferir"],
+  [ArrowDownLeft, "Receber"],
+  [ReceiptText, "Contas"],
+  [WalletCards, "Adicionar"],
 ];
 
 export default function QuickActions() {
