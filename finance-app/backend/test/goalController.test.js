@@ -25,7 +25,7 @@ function createSupabase(pages, ranges) {
 
       return {
         select(columns) {
-          assert.equal(columns, "*");
+          assert.equal(columns, "id, name, target_amount, saved_amount, deadline, created_at");
           return this;
         },
         eq(column, value) {

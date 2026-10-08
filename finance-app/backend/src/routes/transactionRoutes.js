@@ -5,6 +5,7 @@ const authMiddleware = require("../middlewares/authMiddleware");
 const {
   listTransactions,
   createTransaction,
+  updateTransaction,
   deleteTransaction,
 } = require("../controllers/transactionController");
 
@@ -14,6 +15,7 @@ router.use(authMiddleware);
 
 router.get("/", listTransactions);
 router.post("/", createTransaction);
+router.patch("/:id", updateTransaction);
 router.delete("/:id", deleteTransaction);
 
 module.exports = router;
