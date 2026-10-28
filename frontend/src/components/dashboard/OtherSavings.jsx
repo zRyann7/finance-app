@@ -24,3 +24,23 @@ export default function OtherSavings({ summary, chartData }) {
     </section>
   );
 }
+
+const maximum = Math.max(...chartData.map((item) => Math.abs(item.balance)), 1);
+const bars = chartData.map((item) => ({
+  height: item.balance === 0 ? 2 : 18 + (Math.abs(item.balance) / maximum) * 54,
+  negative: item.balance < 0,
+  month: item.month,
+  key: item.key
+}));
+
+// No return, renderize assim:
+<div className="savings-bars" aria-label="Gráfico ilustrativo de economias">
+  {bars.map((bar, index) => (
+    <i 
+      key={`${bar.key}-${index}`} 
+      style={{ height: bar.height, ...(bar.negative ? { filter: "saturate(0) opacity(0.5)" } : {}) }}
+    >
+      <span>{bar.month}</span>
+    </i>
+  ))}
+</div>

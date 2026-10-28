@@ -17,18 +17,25 @@ const formatMoney = (value) =>
     maximumFractionDigits: 2,
   }).format(Number(value) || 0);
 
+
 function ChartTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
-  const value = payload.find((entry) => entry.dataKey === "income")?.value ?? payload[0].value;
-
+  const labels = { income: "Receitas", expenses: "Despesas", balance: "Saldo" };
+  
   return (
-    <div className="chart-tooltip">
-      <span className="tooltip-check">✓</span>
-      <span>{label}</span>
-      <strong>{formatMoney(value)}</strong>
+    <div className="chart-tooltip" style={{ flexDirection: "column", alignItems: "flex-start", gap: "8px" }}>
+      <span style={{ fontWeight: 500, color: "var(--text)" }}>{label}</span>
+      {payload.map(entry => (
+        <div key={entry.dataKey} style={{ display: "flex", justifyContent: "space-between", width: "100%", gap: "16px", fontSize: "12px" }}>
+          <span style={{ color: entry.color }}>{labels[entry.dataKey] || entry.dataKey}</span>
+          <strong style={{ color: "var(--text)" }}>{formatMoney(entry.value)}</strong>
+        </div>
+      ))}
     </div>
   );
 }
+
+<Line type="monotone" dataKey="balance" stroke="#5cc59c" strokeWidth={2} strokeDasharray="4 8" dot={false} activeDot={false} />
 
 export default function StatisticChart({ data, onShowTransactions }) {
   const highlighted = data[2] || { month: "", income: 0 };
