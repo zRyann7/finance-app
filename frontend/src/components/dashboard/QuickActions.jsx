@@ -1,8 +1,8 @@
-import { ArrowDownLeft, ArrowUpRight, ReceiptText, WalletCards } from "lucide-react";
+import { ArrowDownLeft, ReceiptText, WalletCards } from "lucide-react";
 import { useNavigate } from "react-router";
 
+// "Transferir" (/transfers) fica de fora até a funcionalidade existir.
 const actions = [
-  [ArrowUpRight, "Transferir", "/transfers"],
   [ArrowDownLeft, "Receber", "/transactions/new?type=income"],
   [ReceiptText, "Contas", "/bills"],
   [WalletCards, "Adicionar", "/transactions/new?type=expense"],

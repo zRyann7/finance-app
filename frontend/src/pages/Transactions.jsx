@@ -2,22 +2,29 @@ import { useEffect, useMemo, useState } from "react";
 import { Edit3, Plus, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router";
 import ModuleHeader from "../components/ui/ModuleHeader";
-import { deleteTransaction, getTransactions, updateTransaction } from "../services/api";
+import { TRANSACTIONS_LIMIT, deleteTransaction, getTransactions, updateTransaction } from "../services/api";
+import { INVALID_AMOUNT_MESSAGE, parseBRL, toInputAmount } from "../utils/money";
 
 const money = (value) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(value) || 0);
-const date = (value) => value ? new Intl.DateTimeFormat("pt-BR").format(new Date(`${value}T12:00:00`)) : "Sem data";
+// Aceita "AAAA-MM-DD" e timestamps ISO; data inválida vira "Sem data" em vez de derrubar a tela.
+const date = (value) => {
+  if (!value) return "Sem data";
+  const parsed = new Date(`${String(value).slice(0, 10)}T12:00:00`);
+  return Number.isNaN(parsed.getTime()) ? "Sem data" : new Intl.DateTimeFormat("pt-BR").format(parsed);
+};
 
 export default function Transactions() {
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [filter, setFilter] = useState("all");
   const [editing, setEditing] = useState(null);
+  const [amountError, setAmountError] = useState("");
   const [status, setStatus] = useState({ loading: true, error: "" });
 
   async function load() {
     setStatus({ loading: true, error: "" });
     try {
-      setItems(await getTransactions({ limit: 500 }));
+      setItems(await getTransactions({ limit: TRANSACTIONS_LIMIT }));
       setStatus({ loading: false, error: "" });
     } catch (error) {
       setStatus({ loading: false, error: error.response?.data?.error || "Não foi possível carregar as movimentações." });
@@ -37,12 +44,28 @@ export default function Transactions() {
     }
   }
 
+  function openEditor(item) {
+    setAmountError("");
+    setEditing({ ...item, amount: toInputAmount(item.amount), date: item.date?.slice(0, 10) || "" });
+  }
+
+  function closeEditor() {
+    setAmountError("");
+    setEditing(null);
+  }
+
   async function saveEdit(event) {
     event.preventDefault();
+    const amount = parseBRL(editing.amount);
+    if (amount === null) {
+      setAmountError(INVALID_AMOUNT_MESSAGE);
+      return;
+    }
+    setAmountError("");
     try {
-      const updated = await updateTransaction(editing.id, { description: editing.description, amount: editing.amount, type: editing.type, date: editing.date });
+      const updated = await updateTransaction(editing.id, { description: editing.description, amount, type: editing.type, date: editing.date });
       setItems((current) => current.map((item) => item.id === updated.id ? updated : item));
-      setEditing(null);
+      closeEditor();
     } catch (error) {
       setStatus({ loading: false, error: error.response?.data?.error || "Não foi possível atualizar a movimentação." });
     }
@@ -63,19 +86,19 @@ export default function Transactions() {
             <span className={`list-indicator ${item.type}`} />
             <div><strong>{item.description}</strong><small>{date(item.date)} · {item.type === "income" ? "Receita" : "Despesa"}</small></div>
             <b className={item.type}>{item.type === "income" ? "+" : "−"}{money(item.amount)}</b>
-            <button aria-label={`Editar ${item.description}`} onClick={() => setEditing({ ...item })}><Edit3 size={15} /></button>
+            <button aria-label={`Editar ${item.description}`} onClick={() => openEditor(item)}><Edit3 size={15} /></button>
             <button aria-label={`Excluir ${item.description}`} onClick={() => remove(item)}><Trash2 size={15} /></button>
           </article>
         ))}
       </section>
       {editing && (
-        <div className="inline-editor-backdrop" onMouseDown={() => setEditing(null)}>
+        <div className="inline-editor-backdrop" onMouseDown={closeEditor}>
           <form className="module-form inline-editor" onSubmit={saveEdit} onMouseDown={(event) => event.stopPropagation()}>
             <h2>Editar movimentação</h2>
             <label>Descrição<input required maxLength={200} value={editing.description} onChange={(event) => setEditing({ ...editing, description: event.target.value })} /></label>
-            <div className="form-grid"><label>Valor<input required inputMode="decimal" value={editing.amount} onChange={(event) => setEditing({ ...editing, amount: event.target.value.replace(",", ".") })} /></label><label>Tipo<select value={editing.type} onChange={(event) => setEditing({ ...editing, type: event.target.value })}><option value="income">Receita</option><option value="expense">Despesa</option></select></label></div>
-            <label>Data<input type="date" required value={editing.date?.slice(0, 10) || ""} onChange={(event) => setEditing({ ...editing, date: event.target.value })} /></label>
-            <div className="form-actions"><button type="button" onClick={() => setEditing(null)}>Cancelar</button><button className="primary-action">Salvar</button></div>
+            <div className="form-grid"><label>Valor<input required inputMode="decimal" aria-invalid={Boolean(amountError)} aria-describedby={amountError ? "edit-amount-error" : undefined} value={editing.amount} onChange={(event) => setEditing({ ...editing, amount: event.target.value })} />{amountError && <small id="edit-amount-error" className="field-error" role="alert">{amountError}</small>}</label><label>Tipo<select value={editing.type} onChange={(event) => setEditing({ ...editing, type: event.target.value })}><option value="income">Receita</option><option value="expense">Despesa</option></select></label></div>
+            <label>Data<input type="date" required value={editing.date} onChange={(event) => setEditing({ ...editing, date: event.target.value })} /></label>
+            <div className="form-actions"><button type="button" onClick={closeEditor}>Cancelar</button><button className="primary-action">Salvar</button></div>
           </form>
         </div>
       )}

@@ -1,35 +1,45 @@
 function getAllowedOrigins() {
-  const configured = (process.env.CORS_ORIGINS || "")
+  const envOrigins = (process.env.CORS_ORIGINS || process.env.FRONTEND_URL || "")
     .split(",")
-    .map((origin) => origin.trim())
+    .map((origin) => origin.trim().replace(/\/$/, "")) // Remove barra final se houver
     .filter(Boolean);
 
-  if (process.env.NODE_ENV === "production") {
-    if (configured.length === 0) {
-      throw new Error("Configure CORS_ORIGINS no ambiente de produção.");
-    }
-    return new Set(configured);
-  }
-
-  return new Set([
+  const localOrigins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://localhost:8080",
     "http://127.0.0.1:8080",
-    ...configured,
-  ]);
+    "https://finance-app-roan-iota.vercel.app" 
+  ];
+
+  const allOrigins = Array.from(new Set([...localOrigins, ...envOrigins]));
+
+  return allOrigins;
 }
 
 function createCorsOptions() {
   const allowedOrigins = getAllowedOrigins();
+
   return {
-    methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
     origin(origin, callback) {
-      if (!origin || allowedOrigins.has(origin)) return callback(null, true);
-      const error = new Error("Origem não autorizada pelo CORS.");
-      error.status = 403;
-      return callback(error);
+      if (!origin) return callback(null, true);
+
+      const cleanOrigin = origin.replace(/\/$/, "");
+
+      const isAllowed =
+        allowedOrigins.includes(cleanOrigin) ||
+        cleanOrigin.endsWith(".vercel.app");
+
+      if (isAllowed) {
+        return callback(null, true);
+      }
+
+      console.log(`[CORS Bloqueado] Origem não permitida: ${origin}`);
+
+      return callback(null, false);
     },
   };
 }

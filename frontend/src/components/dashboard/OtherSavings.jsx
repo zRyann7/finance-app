@@ -2,9 +2,17 @@ const formatMoney = (value) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(value) || 0);
 
 export default function OtherSavings({ summary, chartData }) {
-  const values = chartData.map((item) => Math.abs(item.balance));
-  const maximum = Math.max(...values, 1);
-  const bars = values.map((value) => value === 0 ? 2 : 18 + (value / maximum) * 54);
+  const maximum = Math.max(...chartData.map((item) => Math.abs(item.balance)), 1);
+  const bars = chartData.map((item) => {
+    const size = Math.abs(item.balance);
+    return {
+      key: item.key,
+      month: item.month,
+      negative: item.balance < 0,
+      height: size === 0 ? 2 : 18 + (size / maximum) * 54,
+      description: `${item.month}: ${formatMoney(item.balance)}`,
+    };
+  });
 
   return (
     <section className="savings-section" aria-labelledby="savings-title">
@@ -17,30 +25,18 @@ export default function OtherSavings({ summary, chartData }) {
           <strong>{summary ? formatMoney(summary.balance) : "—"}</strong>
           <span className="positive-rate">{summary ? `${summary.transactions_count} movimentações` : "Dados indisponíveis"}</span>
         </div>
-        <div className="savings-bars" aria-label="Illustrative savings growth chart">
-          {bars.map((height, index) => <i key={`${chartData[index]?.key}-${index}`} style={{ height }}><span>{chartData[index]?.month}</span></i>)}
+        <div
+          className="savings-bars"
+          role="img"
+          aria-label={`Saldo mensal dos últimos seis meses. ${bars.map((bar) => bar.description).join("; ")}. Barras listradas indicam saldo negativo.`}
+        >
+          {bars.map((bar) => (
+            <i key={bar.key} className={bar.negative ? "is-negative" : undefined} style={{ height: bar.height }} title={bar.description}>
+              <span>{bar.month}</span>
+            </i>
+          ))}
         </div>
       </article>
     </section>
   );
 }
-
-const maximum = Math.max(...chartData.map((item) => Math.abs(item.balance)), 1);
-const bars = chartData.map((item) => ({
-  height: item.balance === 0 ? 2 : 18 + (Math.abs(item.balance) / maximum) * 54,
-  negative: item.balance < 0,
-  month: item.month,
-  key: item.key
-}));
-
-// No return, renderize assim:
-<div className="savings-bars" aria-label="Gráfico ilustrativo de economias">
-  {bars.map((bar, index) => (
-    <i 
-      key={`${bar.key}-${index}`} 
-      style={{ height: bar.height, ...(bar.negative ? { filter: "saturate(0) opacity(0.5)" } : {}) }}
-    >
-      <span>{bar.month}</span>
-    </i>
-  ))}
-</div>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { deleteTransaction, getGoals, getSummary, getTransactions } from "../services/api";
+import { TRANSACTIONS_LIMIT, deleteTransaction, getGoals, getSummary, getTransactions } from "../services/api";
 
 function buildMonthlyChart(transactions) {
   const formatter = new Intl.DateTimeFormat("pt-BR", { month: "short" });
@@ -32,67 +32,60 @@ function buildMonthlyChart(transactions) {
 }
 
 export function useDashboardData({ session }) {
-  // 1. Declaração de estados PRIMEIRO
+  const month = useMemo(() => {
+    const current = new Date();
+    return `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, "0")}`;
+  }, []);
   const [summary, setSummary] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState(null);
   const [error, setError] = useState("");
-
-  // 2. Variáveis dependentes
-  const month = useMemo(() => {
-    const current = new Date();
-    return `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, "0")}`;
-  }, []);
-
-  const API_OPTIONS = { limit: 500 };
-  
-  // Agora funciona, pois 'transactions' já existe
   const chartData = useMemo(() => buildMonthlyChart(transactions), [transactions]);
 
-  // 3. Busca inicial de dados
   useEffect(() => {
-    async function fetchInitialData() {
-      setLoading(true);
-      try {
-        const results = await Promise.allSettled([
-          getSummary(month), 
-          getTransactions(API_OPTIONS), 
-          getGoals()
-        ]);
-        
-        // Exemplo de como extrair os dados (adapte conforme sua API)
-        if (results[0].status === 'fulfilled') setSummary(results[0].value);
-        if (results[1].status === 'fulfilled') setTransactions(results[1].value);
-        if (results[2].status === 'fulfilled') setGoals(results[2].value);
-      } catch (err) {
-        setError("Erro ao carregar os dados.");
-      } finally {
-        setLoading(false);
-      }
-    }
+    if (!session) return;
 
-    fetchInitialData();
-  }, [month]);
+    let active = true;
+    setLoading(true);
 
-  // 4. Função de remover transação (onde o Promise.all com await se encaixa)
+    Promise.allSettled([getSummary(month), getTransactions({ limit: TRANSACTIONS_LIMIT }), getGoals()])
+      .then(([summaryResult, transactionResult, goalResult]) => {
+        if (!active) return;
+
+        setSummary(summaryResult.status === "fulfilled" ? summaryResult.value : null);
+        setTransactions(transactionResult.status === "fulfilled" ? transactionResult.value : []);
+        setGoals(goalResult.status === "fulfilled" ? goalResult.value : []);
+        const failures = [summaryResult, transactionResult, goalResult]
+          .filter((result) => result.status === "rejected")
+          .map((result) => result.reason?.response?.data?.error)
+          .filter(Boolean);
+        setError(failures[0] || (failures.length ? "Parte dos seus dados não pôde ser carregada." : ""));
+      })
+      .finally(() => active && setLoading(false));
+
+    return () => {
+      active = false;
+    };
+  }, [month, session]);
+
   async function removeTransaction(id) {
     setDeletingId(id);
-    try {
-      // Seu código para deletar a transação na API iria aqui
-      // ex: await api.delete(`/transactions/${id}`);
+    setError("");
 
-      // Atualiza os dados no final da função:
+    try {
+      await deleteTransaction(id);
       const [summaryData, transactionData] = await Promise.all([
-        getSummary(month), 
-        getTransactions(API_OPTIONS)
+        getSummary(month),
+        getTransactions({ limit: TRANSACTIONS_LIMIT }),
       ]);
-      
       setSummary(summaryData);
       setTransactions(transactionData);
-    } catch (err) {
-      console.error("Erro ao remover transação", err);
+    } catch (requestError) {
+      const message = requestError.response?.data?.error || "Não foi possível excluir a transação.";
+      setError(message);
+      throw requestError;
     } finally {
       setDeletingId(null);
     }
@@ -102,10 +95,10 @@ export function useDashboardData({ session }) {
     summary,
     transactions,
     goals,
-    loading,
-    error,
-    deletingId,
     chartData,
-    removeTransaction
+    loading,
+    deletingId,
+    error,
+    removeTransaction,
   };
 }

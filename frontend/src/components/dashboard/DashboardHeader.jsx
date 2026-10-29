@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bell, CreditCard, Menu, MoreVertical, WalletCards } from "lucide-react";
+import { Bell, CreditCard, MoreVertical, WalletCards } from "lucide-react";
 import { useNavigate } from "react-router";
 
 const formatMoney = (value) =>
@@ -21,7 +21,8 @@ function Metric({ icon: Icon, label, value }) {
   );
 }
 
-export default function DashboardHeader({ summary, loading }) {
+// notificationCount: o ponto só aparece quando houver notificações reais.
+export default function DashboardHeader({ summary, loading, notificationCount = 0 }) {
   const navigate = useNavigate();
   const [openPanel, setOpenPanel] = useState(null);
 
@@ -29,7 +30,6 @@ export default function DashboardHeader({ summary, loading }) {
     <header className="dashboard-header">
       <div className="dashboard-title">
         <h1>Meu Dashboard</h1>
-        <Menu size={18} strokeWidth={2.2} />
       </div>
 
       <div className={`metrics-bar ${loading ? "is-loading" : ""}`}>
@@ -39,9 +39,9 @@ export default function DashboardHeader({ summary, loading }) {
       </div>
 
       <div className="header-actions">
-        <button aria-label="Notificações" className="round-action" onClick={() => setOpenPanel(openPanel === "notifications" ? null : "notifications")}>
+        <button aria-label={notificationCount > 0 ? `Notificações (${notificationCount} novas)` : "Notificações"} className="round-action" onClick={() => setOpenPanel(openPanel === "notifications" ? null : "notifications")}>
           <Bell size={17} strokeWidth={1.8} />
-          <span className="notification-dot" />
+          {notificationCount > 0 && <span className="notification-dot" />}
         </button>
         <button aria-label="Mais opções" className="round-action" onClick={() => setOpenPanel(openPanel === "menu" ? null : "menu")}>
           <MoreVertical size={17} strokeWidth={1.8} />

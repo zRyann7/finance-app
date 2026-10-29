@@ -1,6 +1,8 @@
 import axios from "axios";
 import { clearSession, getSession, saveSession } from "./session";
 
+export const TRANSACTIONS_LIMIT = 500;
+
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000/api",
   timeout: 10000,
