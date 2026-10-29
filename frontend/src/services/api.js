@@ -3,8 +3,12 @@ import { clearSession, getSession, saveSession } from "./session";
 
 export const TRANSACTIONS_LIMIT = 500;
 
+// Captura a variável de ambiente e remove qualquer barra final (se houver) para evitar duplicatas como //api
+const envUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, "");
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000/api",
+  // Se a envUrl existir, garante que termina com /api. Se não, usa o localhost por defeito.
+  baseURL: envUrl ? `${envUrl}/api` : "http://localhost:3000/api",
   timeout: 10000,
 });
 
