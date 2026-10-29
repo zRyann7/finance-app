@@ -12,13 +12,26 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { session, profile } = useOutletContext();
   const [showTransactions, setShowTransactions] = useState(false);
-  const { summary, transactions, goals, chartData, loading, deletingId, error, removeTransaction } = useDashboardData({ session });
+  
+  // chartData = [] garante que a variável nunca seja undefined na montagem
+  const { 
+    summary, 
+    transactions = [], 
+    goals = [], 
+    chartData = [], 
+    loading, 
+    deletingId, 
+    error, 
+    removeTransaction 
+  } = useDashboardData({ session });
 
   return (
     <>
       <DashboardHeader summary={summary} loading={loading} />
       {error && <div className="data-error" role="alert">{error}</div>}
-      {!loading && !error && summary?.transactions_count === 0 && <div className="data-empty" role="status">Nenhuma movimentação no mês atual.</div>}
+      {!loading && !error && summary?.transactions_count === 0 && (
+        <div className="data-empty" role="status">Nenhuma movimentação no mês atual.</div>
+      )}
       <div className="dashboard-content">
         <div className="main-column">
           <StatisticChart data={chartData} onShowTransactions={() => navigate("/transactions")} />
@@ -27,9 +40,21 @@ export default function Dashboard() {
             <OtherSavings summary={summary} chartData={chartData} />
           </div>
         </div>
-        <RightPanel profile={profile} transactions={transactions} summary={summary} onSeeAll={() => setShowTransactions(true)} />
+        <RightPanel 
+          profile={profile} 
+          transactions={transactions} 
+          summary={summary} 
+          onSeeAll={() => setShowTransactions(true)} 
+        />
       </div>
-      {showTransactions && <TransactionsDialog transactions={transactions} deletingId={deletingId} onDelete={removeTransaction} onClose={() => setShowTransactions(false)} />}
+      {showTransactions && (
+        <TransactionsDialog 
+          transactions={transactions} 
+          deletingId={deletingId} 
+          onDelete={removeTransaction} 
+          onClose={() => setShowTransactions(false)} 
+        />
+      )}
     </>
   );
 }
