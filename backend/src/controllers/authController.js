@@ -65,13 +65,14 @@ function getAuthErrorResponse(error) {
   };
 }
 
+const DUPLICATE_ACCOUNT_CODES = ["user_already_exists", "email_exists"];
+const EMAIL_CONFIRMATION_MESSAGE = "Conta criada. Confirme seu email antes de entrar.";
+
+function isDuplicateEmailError(error) {
+  return DUPLICATE_ACCOUNT_CODES.includes(error?.code);
+}
+
 function getRegistrationErrorResponse(error) {
-  const duplicateAccountCodes = ["user_already_exists", "email_exists"];
-
-  if (duplicateAccountCodes.includes(error?.code)) {
-    return { status: 409, message: "Já existe uma conta com este email." };
-  }
-
   if (error?.code === "weak_password") {
     return { status: 400, message: "A senha não atende aos requisitos de segurança." };
   }
@@ -118,10 +119,7 @@ async function login(req, res) {
       status: error.status || response.status,
     });
 
-    return res.status(response.status).json({
-      error: response.message,
-      auth_code: error.code || error.name || "unknown",
-    });
+    return res.status(response.status).json({ error: response.message });
   }
 
   return res.json({
@@ -182,6 +180,15 @@ async function register(req, res) {
   });
 
   if (error) {
+    // Anti-enumeração: um e-mail já cadastrado recebe a MESMA resposta de uma conta nova,
+    // para que o endpoint não sirva para descobrir quem já usa o sistema.
+    if (isDuplicateEmailError(error)) {
+      return res.status(201).json({
+        requires_email_confirmation: true,
+        message: EMAIL_CONFIRMATION_MESSAGE,
+      });
+    }
+
     const response = getRegistrationErrorResponse(error);
     console.warn("Falha no cadastro Supabase Auth:", {
       code: error.code || "unknown",
@@ -196,7 +203,7 @@ async function register(req, res) {
   return res.status(201).json({
     requires_email_confirmation: requiresEmailConfirmation,
     message: requiresEmailConfirmation
-      ? "Conta criada. Confirme seu email antes de entrar."
+      ? EMAIL_CONFIRMATION_MESSAGE
       : "Conta criada com sucesso.",
     ...(data.session && {
       access_token: data.session.access_token,
@@ -251,6 +258,7 @@ module.exports = {
   logout,
   getAuthErrorResponse,
   getRegistrationErrorResponse,
+  isDuplicateEmailError,
   getCurrentUser,
   getUserDisplayName,
 };

@@ -1,3 +1,5 @@
+const { isInvalidIdError } = require("../utils/validation");
+
 function getBillValues(body, partial = false) {
   const input = body || {};
   const values = {};
@@ -51,6 +53,7 @@ async function updateBill(req, res) {
   const values = getBillValues(req.body, true);
   if (!values || Object.keys(values).length === 0) return res.status(400).json({ error: "Nenhuma alteração válida foi informada." });
   const { data, error } = await req.supabase.from("recurring_expenses").update(values).eq("id", req.params.id).eq("user_id", req.user.id).select("id, description, amount, due_day, active, created_at").maybeSingle();
+  if (isInvalidIdError(error)) return res.status(404).json({ error: "Conta recorrente não encontrada." });
   if (error) {
     console.error("Erro ao atualizar conta:", error.message);
     return res.status(500).json({ error: "Erro ao atualizar conta recorrente." });
@@ -61,6 +64,7 @@ async function updateBill(req, res) {
 
 async function deleteBill(req, res) {
   const { data, error } = await req.supabase.from("recurring_expenses").delete().eq("id", req.params.id).eq("user_id", req.user.id).select("id").maybeSingle();
+  if (isInvalidIdError(error)) return res.status(404).json({ error: "Conta recorrente não encontrada." });
   if (error) {
     console.error("Erro ao excluir conta:", error.message);
     return res.status(500).json({ error: "Erro ao excluir conta recorrente." });

@@ -21,7 +21,6 @@ function Metric({ icon: Icon, label, value }) {
   );
 }
 
-// notificationCount: o ponto só aparece quando houver notificações reais.
 export default function DashboardHeader({ summary, loading, notificationCount = 0 }) {
   const navigate = useNavigate();
   const [openPanel, setOpenPanel] = useState(null);
@@ -39,22 +38,32 @@ export default function DashboardHeader({ summary, loading, notificationCount = 
       </div>
 
       <div className="header-actions">
-        <button aria-label={notificationCount > 0 ? `Notificações (${notificationCount} novas)` : "Notificações"} className="round-action" onClick={() => setOpenPanel(openPanel === "notifications" ? null : "notifications")}>
+        <button 
+          aria-label={notificationCount > 0 ? `Notificações (${notificationCount} novas)` : "Notificações"} 
+          className="round-action" 
+          onClick={() => setOpenPanel(openPanel === "notifications" ? null : "notifications")}
+        >
           <Bell size={17} strokeWidth={1.8} />
           {notificationCount > 0 && <span className="notification-dot" />}
         </button>
-        <button aria-label="Mais opções" className="round-action" onClick={() => setOpenPanel(openPanel === "menu" ? null : "menu")}>
+        <button 
+          aria-label="Mais opções" 
+          className="round-action" 
+          onClick={() => setOpenPanel(openPanel === "menu" ? null : "menu")}
+        >
           <MoreVertical size={17} strokeWidth={1.8} />
         </button>
+
         {openPanel === "notifications" && (
           <div className="header-popover notification-popover" role="status">
             <strong>Notificações</strong><span>Nenhuma notificação no momento.</span>
           </div>
         )}
+
         {openPanel === "menu" && (
           <div className="header-popover menu-popover">
-            <button onClick={() => navigate("/transactions/new")}>Nova movimentação</button>
-            <button onClick={() => navigate("/settings")}>Configurações</button>
+            <button onClick={() => { setOpenPanel(null); navigate("/transactions/new"); }}>Nova movimentação</button>
+            <button onClick={() => { setOpenPanel(null); navigate("/settings"); }}>Configurações</button>
           </div>
         )}
       </div>

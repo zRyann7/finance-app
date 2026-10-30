@@ -3,12 +3,13 @@ import { clearSession, getSession, saveSession } from "./session";
 
 export const TRANSACTIONS_LIMIT = 500;
 
-// Captura a variável de ambiente e remove qualquer barra final (se houver) para evitar duplicatas como //api
-const envUrl = import.meta.env.VITE_API_URL?.replace(/\/$/, "");
+// VITE_API_URL pode vir com ou sem o sufixo /api (http://localhost:3000 ou http://localhost:3000/api):
+// removemos barras finais e um /api final e acrescentamos /api uma única vez.
+const rawApiUrl = (import.meta.env.VITE_API_URL || "http://localhost:3000").trim();
+export const API_BASE_URL = `${rawApiUrl.replace(/\/+$/, "").replace(/\/api$/, "")}/api`;
 
 const api = axios.create({
-  // Se a envUrl existir, garante que termina com /api. Se não, usa o localhost por defeito.
-  baseURL: envUrl ? `${envUrl}/api` : "http://localhost:3000/api",
+  baseURL: API_BASE_URL,
   timeout: 10000,
 });
 
@@ -71,6 +72,13 @@ export async function register(credentials) {
   return data;
 }
 
+// Devolve um access_token válido. Uma chamada autenticada barata faz o interceptor
+// renovar o token (via refresh) caso o atual tenha expirado.
+export async function getFreshAccessToken() {
+  await getCurrentUser();
+  return getSession()?.access_token;
+}
+
 export async function logout() {
   await api.post("/auth/logout");
 }
@@ -97,6 +105,11 @@ export async function updateProfile(profile) {
 
 export async function getSummary(month) {
   const { data } = await api.get("/summary", { params: { month } });
+  return data;
+}
+
+export async function getSummaryHistory(end, months = 6) {
+  const { data } = await api.get("/summary/history", { params: { end, months } });
   return data;
 }
 

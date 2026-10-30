@@ -91,3 +91,61 @@ test("rejeita mês inválido antes de consultar o banco", async () => {
     error: "Informe um mês válido no formato AAAA-MM.",
   });
 });
+
+const { getHistory, shiftMonth } = require("../src/controllers/summaryController");
+
+test("shiftMonth atravessa a virada de ano nos dois sentidos", () => {
+  assert.equal(shiftMonth("2026-12", 1), "2027-01");
+  assert.equal(shiftMonth("2026-01", -1), "2025-12");
+  assert.equal(shiftMonth("2026-10", -5), "2026-05");
+});
+
+test("histórico soma todas as páginas por mês, sem o limite de 500 da listagem", async () => {
+  const bounds = [];
+  const firstPage = Array.from({ length: 500 }, (_, index) => ({
+    id: index + 1,
+    amount: "1.00",
+    type: "income",
+    date: "2026-08-15",
+  }));
+  const secondPage = [
+    { id: 501, amount: "10.50", type: "expense", date: "2026-10-01" },
+    { id: 502, amount: "0.50", type: "expense", date: "2026-10-31" },
+  ];
+  const pages = [firstPage, secondPage];
+  const req = {
+    query: { end: "2026-10", months: "3" },
+    user: { id: "user-123" },
+    supabase: {
+      from() {
+        return {
+          select() { return this; },
+          eq() { return this; },
+          gte(column, value) { bounds.push([column, value]); return this; },
+          lt(column, value) { bounds.push([column, value]); return this; },
+          order() { return this; },
+          range() { return Promise.resolve({ data: pages.shift(), error: null }); },
+        };
+      },
+    },
+  };
+  const res = createResponse();
+
+  await getHistory(req, res);
+
+  assert.equal(res.statusCode, 200);
+  assert.deepEqual(bounds.slice(0, 2), [["date", "2026-08-01"], ["date", "2026-11-01"]]);
+  assert.deepEqual(res.body, [
+    { month: "2026-08", income: 500, expenses: 0, balance: 500 },
+    { month: "2026-09", income: 0, expenses: 0, balance: 0 },
+    { month: "2026-10", income: 0, expenses: 11, balance: -11 },
+  ]);
+});
+
+test("histórico valida mês final e quantidade de meses antes de consultar o banco", async () => {
+  for (const query of [{}, { end: "2026-13" }, { end: "2026-10", months: "0" }, { end: "2026-10", months: "13" }, { end: "2026-10", months: "abc" }]) {
+    const res = createResponse();
+    await getHistory({ query }, res);
+    assert.equal(res.statusCode, 400, JSON.stringify(query));
+  }
+});

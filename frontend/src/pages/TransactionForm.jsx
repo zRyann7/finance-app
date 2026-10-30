@@ -3,13 +3,14 @@ import { Save } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router";
 import ModuleHeader from "../components/ui/ModuleHeader";
 import { createTransaction } from "../services/api";
+import { toLocalDateInput } from "../utils/date";
 import { INVALID_AMOUNT_MESSAGE, parseBRL } from "../utils/money";
 
 export default function TransactionForm() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const initialType = useMemo(() => params.get("type") === "income" ? "income" : "expense", [params]);
-  const [form, setForm] = useState({ description: "", amount: "", type: initialType, date: new Date().toISOString().slice(0, 10) });
+  const [form, setForm] = useState({ description: "", amount: "", type: initialType, date: toLocalDateInput() });
   const [error, setError] = useState("");
   const [amountError, setAmountError] = useState("");
   const [loading, setLoading] = useState(false);

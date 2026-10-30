@@ -1,48 +1,54 @@
 import { useEffect, useMemo, useState } from "react";
-import { TRANSACTIONS_LIMIT, deleteTransaction, getGoals, getSummary, getTransactions } from "../services/api";
+import {
+  TRANSACTIONS_LIMIT,
+  deleteTransaction,
+  getGoals,
+  getSummary,
+  getSummaryHistory,
+  getTransactions,
+} from "../services/api";
+import { monthKeysEndingAt, toMonthKey } from "../utils/date";
 
-function buildMonthlyChart(transactions) {
-  const formatter = new Intl.DateTimeFormat("pt-BR", { month: "short" });
-  const now = new Date();
-  const months = Array.from({ length: 6 }, (_, index) => {
-    const date = new Date(now.getFullYear(), now.getMonth() - (5 - index), 1);
-    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+const CHART_MONTHS = 6;
+const monthFormatter = new Intl.DateTimeFormat("pt-BR", { month: "short" });
+
+function monthLabel(key) {
+  const [year, month] = key.split("-").map(Number);
+
+  return monthFormatter
+    .format(new Date(year, month - 1, 1))
+    .replace(".", "")
+    .replace(/^./, (letter) => letter.toUpperCase());
+}
+
+// Os totais por mês vêm do backend (/summary/history), calculados sobre TODAS as transações.
+// Somar no cliente a lista de transações (limitada a 500) deixava meses antigos incompletos.
+function buildMonthlyChart(history, currentMonth) {
+  const byMonth = new Map(history.map((item) => [item.month, item]));
+
+  return monthKeysEndingAt(currentMonth, CHART_MONTHS).map((key) => {
+    const item = byMonth.get(key);
 
     return {
       key,
-      month: formatter.format(date).replace(".", "").replace(/^./, (letter) => letter.toUpperCase()),
-      income: 0,
-      expenses: 0,
-      balance: 0,
+      month: monthLabel(key),
+      income: Number(item?.income) || 0,
+      expenses: Number(item?.expenses) || 0,
+      balance: Number(item?.balance) || 0,
     };
   });
-  const byMonth = new Map(months.map((item) => [item.key, item]));
-
-  for (const transaction of transactions) {
-    const item = byMonth.get(String(transaction.date).slice(0, 7));
-    if (!item) continue;
-
-    const amount = Number(transaction.amount) || 0;
-    if (transaction.type === "income") item.income += amount;
-    if (transaction.type === "expense") item.expenses += amount;
-    item.balance = item.income - item.expenses;
-  }
-
-  return months;
 }
 
 export function useDashboardData({ session }) {
-  const month = useMemo(() => {
-    const current = new Date();
-    return `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, "0")}`;
-  }, []);
+  const month = useMemo(() => toMonthKey(), []);
   const [summary, setSummary] = useState(null);
+  const [history, setHistory] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState(null);
   const [error, setError] = useState("");
-  const chartData = useMemo(() => buildMonthlyChart(transactions), [transactions]);
+  const chartData = useMemo(() => buildMonthlyChart(history, month), [history, month]);
 
   useEffect(() => {
     if (!session) return;
@@ -50,18 +56,28 @@ export function useDashboardData({ session }) {
     let active = true;
     setLoading(true);
 
-    Promise.allSettled([getSummary(month), getTransactions({ limit: TRANSACTIONS_LIMIT }), getGoals()])
-      .then(([summaryResult, transactionResult, goalResult]) => {
+    Promise.allSettled([
+      getSummary(month),
+      getTransactions({ limit: TRANSACTIONS_LIMIT }),
+      getGoals(),
+      getSummaryHistory(month, CHART_MONTHS),
+    ])
+      .then((results) => {
         if (!active) return;
+
+        const [summaryResult, transactionResult, goalResult, historyResult] = results;
 
         setSummary(summaryResult.status === "fulfilled" ? summaryResult.value : null);
         setTransactions(transactionResult.status === "fulfilled" ? transactionResult.value : []);
         setGoals(goalResult.status === "fulfilled" ? goalResult.value : []);
-        const failures = [summaryResult, transactionResult, goalResult]
+        setHistory(historyResult.status === "fulfilled" ? historyResult.value : []);
+
+        const failures = results
           .filter((result) => result.status === "rejected")
           .map((result) => result.reason?.response?.data?.error)
           .filter(Boolean);
-        setError(failures[0] || (failures.length ? "Parte dos seus dados não pôde ser carregada." : ""));
+        const failedCount = results.filter((result) => result.status === "rejected").length;
+        setError(failures[0] || (failedCount ? "Parte dos seus dados não pôde ser carregada." : ""));
       })
       .finally(() => active && setLoading(false));
 
@@ -76,12 +92,14 @@ export function useDashboardData({ session }) {
 
     try {
       await deleteTransaction(id);
-      const [summaryData, transactionData] = await Promise.all([
+      const [summaryData, transactionData, historyData] = await Promise.all([
         getSummary(month),
         getTransactions({ limit: TRANSACTIONS_LIMIT }),
+        getSummaryHistory(month, CHART_MONTHS),
       ]);
       setSummary(summaryData);
       setTransactions(transactionData);
+      setHistory(historyData);
     } catch (requestError) {
       const message = requestError.response?.data?.error || "Não foi possível excluir a transação.";
       setError(message);

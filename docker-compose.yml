@@ -1,15 +1,37 @@
+# Uso local: copie backend/.env.example para backend/.env, preencha o Supabase e rode:
+#   docker compose up --build
+# Frontend em http://localhost:8080 e API em http://localhost:3000
 services:
   backend:
     build: ./backend
     ports:
       - "3000:3000"
+    env_file:
+      - ./backend/.env
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      # Em produção as origens precisam ser explícitas (o frontend local roda na 8080).
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080,http://localhost:5173}
+      # Sem proxy reverso na frente do container no uso local.
+      TRUST_PROXY_HOPS: "0"
+    restart: unless-stopped
     networks:
       - finance-network
 
-  frontend:       
-    build: ./frontend
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Endereço da API como o NAVEGADOR enxerga (sem o sufixo /api).
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL:-}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY:-}
     ports:
       - "8080:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
     networks:
       - finance-network
 

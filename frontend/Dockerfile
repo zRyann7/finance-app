@@ -3,9 +3,15 @@ FROM node:22-alpine AS build
 WORKDIR /app
 
 # A URL da API é lida pelo Vite em tempo de BUILD e fica dentro do bundle.
-# Para outro ambiente: docker build --build-arg VITE_API_URL=https://seu-dominio/api -t frontend .
-ARG VITE_API_URL=http://localhost:3000/api
+# Para outro ambiente: docker build --build-arg VITE_API_URL=https://seu-dominio -t frontend .
+# (endereço da API sem o sufixo /api; com ele também funciona)
+ARG VITE_API_URL=http://localhost:3000
 ENV VITE_API_URL=$VITE_API_URL
+# Supabase (público) só para o upload de avatar. Também alimenta a CSP gerada no build.
+ARG VITE_SUPABASE_URL=
+ARG VITE_SUPABASE_ANON_KEY=
+ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
+ENV VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
 
 COPY package*.json ./
 RUN npm ci

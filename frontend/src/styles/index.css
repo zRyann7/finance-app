@@ -103,6 +103,8 @@ body {
 }
 
 .dashboard-header, .dashboard-content, .data-error { position: relative; z-index: 1; }
+/* O header precisa ficar acima do conteúdo (foto de perfil/painel direito) para que o popover de menu receba os cliques */
+.dashboard-header { z-index: 5; }
 .dashboard-header { height: 58px; display: grid; grid-template-columns: minmax(250px, 1fr) 377px 260px; align-items: start; }
 .dashboard-title { display: flex; align-items: center; gap: 7px; padding-top: 9px; }
 .dashboard-title h1 { margin: 0; font-size: 20px; line-height: 1; font-weight: 600; letter-spacing: -.5px; }
@@ -292,6 +294,8 @@ body {
 .auth-switch { margin: 20px 0 0 !important; color: #8d8587; font-size: 10px !important; text-align: center; }
 .auth-switch a { color: #dfa077; text-decoration: none; }
 .auth-switch a:hover { color: #f0b089; }
+.auth-switch button { padding: 0; border: 0; color: #dfa077; background: transparent; font: inherit; cursor: pointer; }
+.auth-switch button:hover { color: #f0b089; }
 .register-card { width: min(580px, calc(100vw - 32px)); }
 .auth-field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .auth-secondary-action { width: 100%; margin-top: 14px; padding: 8px; display: flex; justify-content: center; align-items: center; gap: 6px; border: 0; color: var(--muted); background: transparent; cursor: pointer; }

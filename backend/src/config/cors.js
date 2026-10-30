@@ -1,20 +1,31 @@
+const LOCAL_ORIGINS = [
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "http://localhost:8080",
+  "http://127.0.0.1:8080",
+];
+
+function normalizeOrigin(origin) {
+  return origin.trim().replace(/\/+$/, "");
+}
+
 function getAllowedOrigins() {
-  const envOrigins = (process.env.CORS_ORIGINS || process.env.FRONTEND_URL || "")
+  const configured = (process.env.CORS_ORIGINS || process.env.FRONTEND_URL || "")
     .split(",")
-    .map((origin) => origin.trim().replace(/\/$/, "")) // Remove barra final se houver
+    .map(normalizeOrigin)
     .filter(Boolean);
 
-  const localOrigins = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://localhost:8080",
-    "http://127.0.0.1:8080",
-    "https://finance-app-roan-iota.vercel.app" 
-  ];
+  if (process.env.NODE_ENV === "production") {
+    if (configured.length === 0) {
+      throw new Error(
+        "Defina CORS_ORIGINS com as origens do frontend (separadas por vírgula) em produção.",
+      );
+    }
 
-  const allOrigins = Array.from(new Set([...localOrigins, ...envOrigins]));
+    return new Set(configured);
+  }
 
-  return allOrigins;
+  return new Set([...LOCAL_ORIGINS, ...configured]);
 }
 
 function createCorsOptions() {
@@ -23,22 +34,17 @@ function createCorsOptions() {
   return {
     methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
+    // A autenticação usa o header Authorization (Bearer), não cookies.
+    credentials: false,
     origin(origin, callback) {
+      // Requisições sem Origin (curl, health checks, server-to-server) não são de navegador.
       if (!origin) return callback(null, true);
 
-      const cleanOrigin = origin.replace(/\/$/, "");
-
-      const isAllowed =
-        allowedOrigins.includes(cleanOrigin) ||
-        cleanOrigin.endsWith(".vercel.app");
-
-      if (isAllowed) {
+      if (allowedOrigins.has(normalizeOrigin(origin))) {
         return callback(null, true);
       }
 
-      console.log(`[CORS Bloqueado] Origem não permitida: ${origin}`);
-
+      console.warn(`[CORS] Origem não permitida: ${origin}`);
       return callback(null, false);
     },
   };

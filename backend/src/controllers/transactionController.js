@@ -1,3 +1,5 @@
+const { isInvalidIdError, isValidIsoDate, isValidResourceId } = require("../utils/validation");
+
 function getTransactionUpdates(body, partial = false) {
   const updates = {};
   const input = body || {};
@@ -19,8 +21,7 @@ function getTransactionUpdates(body, partial = false) {
   }
 
   if (Object.hasOwn(input, "date")) {
-    const validDate = typeof input.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(input.date) && !Number.isNaN(Date.parse(input.date)) && new Date(input.date).toISOString().slice(0, 10) === input.date;
-    if (!validDate) return null;
+    if (!isValidIsoDate(input.date)) return null;
     updates.date = input.date;
   }
 
@@ -36,6 +37,8 @@ async function listTransactions(req, res) {
     .select("id, description, amount, type, date, category_id")
     .eq("user_id", req.user.id)
     .order("date", { ascending: false })
+    // Desempate estável: sem isso, transações do mesmo dia podem trocar de posição entre chamadas.
+    .order("id", { ascending: false })
     .limit(limit);
 
   if (["income", "expense"].includes(req.query?.type)) query = query.eq("type", req.query.type);
@@ -75,7 +78,7 @@ async function createTransaction(req, res) {
 async function updateTransaction(req, res) {
   const { id } = req.params;
   const updates = getTransactionUpdates(req.body, true);
-  if (!/^[a-zA-Z0-9-]{1,100}$/.test(id || "")) return res.status(400).json({ error: "Identificador de transação inválido." });
+  if (!isValidResourceId(id)) return res.status(400).json({ error: "Identificador de transação inválido." });
   if (!updates || Object.keys(updates).length === 0) return res.status(400).json({ error: "Nenhuma alteração válida foi informada." });
 
   const { data, error } = await req.supabase
@@ -86,6 +89,7 @@ async function updateTransaction(req, res) {
     .select("id, description, amount, type, date, category_id")
     .maybeSingle();
 
+  if (isInvalidIdError(error)) return res.status(404).json({ error: "Transação não encontrada." });
   if (error) {
     console.error("Erro ao atualizar transação:", error.message);
     return res.status(500).json({ error: "Erro ao atualizar movimentação." });
@@ -96,7 +100,7 @@ async function updateTransaction(req, res) {
 
 async function deleteTransaction(req, res) {
   const { id } = req.params;
-  if (typeof id !== "string" || !/^[a-zA-Z0-9-]{1,100}$/.test(id)) return res.status(400).json({ error: "Identificador de transação inválido." });
+  if (!isValidResourceId(id)) return res.status(400).json({ error: "Identificador de transação inválido." });
 
   const { data, error } = await req.supabase
     .from("transactions")
@@ -106,6 +110,7 @@ async function deleteTransaction(req, res) {
     .select("id")
     .maybeSingle();
 
+  if (isInvalidIdError(error)) return res.status(404).json({ error: "Transação não encontrada." });
   if (error) {
     console.error("Erro ao excluir transação:", error.message);
     return res.status(500).json({ error: "Erro ao excluir transação." });

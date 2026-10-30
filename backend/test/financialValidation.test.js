@@ -20,3 +20,23 @@ test("valida dia de vencimento e estado de contas recorrentes", () => {
   assert.deepEqual(getBillValues({ description: "Internet", amount: "99.90", due_day: 10 }), { description: "Internet", amount: "99.90", due_day: 10, active: true });
   assert.equal(getBillValues({ description: "Conta", amount: "10", due_day: 32 }), null);
 });
+
+test("metas rejeitam datas impossíveis e null em atualização parcial", () => {
+  const base = { name: "Viagem", target_amount: "1000" };
+
+  assert.equal(getGoalValues({ ...base, deadline: "2026-02-31" }), null);
+  assert.equal(getGoalValues({ ...base, deadline: "2026-04-31" }), null);
+  assert.equal(getGoalValues({ ...base, deadline: "2026-13-01" }), null);
+  assert.equal(getGoalValues({ ...base, deadline: "2028-02-29" }).deadline, "2028-02-29");
+  assert.equal(getGoalValues({ ...base, deadline: "" }).deadline, null);
+
+  assert.equal(getGoalValues({ saved_amount: null }, true), null);
+  assert.deepEqual(getGoalValues({ saved_amount: "0" }, true), { saved_amount: "0" });
+});
+
+test("transações rejeitam datas impossíveis", () => {
+  const base = { description: "Mercado", amount: "10", type: "expense" };
+
+  assert.equal(getTransactionUpdates({ ...base, date: "2026-02-31" }), null);
+  assert.equal(getTransactionUpdates({ ...base, date: "2026-10-31" }).date, "2026-10-31");
+});

@@ -1,3 +1,5 @@
+const { isInvalidIdError, isValidIsoDate } = require("../utils/validation");
+
 function getGoalValues(body, partial = false) {
   const input = body || {};
   const values = {};
@@ -9,7 +11,10 @@ function getGoalValues(body, partial = false) {
 
   for (const field of ["target_amount", "saved_amount"]) {
     if (!partial || Object.hasOwn(input, field)) {
-      const value = String(input[field] ?? (field === "saved_amount" ? "0" : ""));
+      const raw = input[field];
+      // Em atualização parcial, enviar o campo como null é erro (antes virava 0 em silêncio).
+      if (partial && (raw === null || raw === undefined)) return null;
+      const value = String(raw ?? (field === "saved_amount" ? "0" : ""));
       if (!/^(?:0|[1-9]\d{0,9})(?:\.\d{1,2})?$/.test(value)) return null;
       if (field === "target_amount" && Number(value) <= 0) return null;
       values[field] = value;
@@ -19,8 +24,7 @@ function getGoalValues(body, partial = false) {
   if (Object.hasOwn(input, "deadline")) {
     if (input.deadline === null || input.deadline === "") values.deadline = null;
     else {
-      const validDate = typeof input.deadline === "string" && /^\d{4}-\d{2}-\d{2}$/.test(input.deadline) && !Number.isNaN(Date.parse(input.deadline));
-      if (!validDate) return null;
+      if (!isValidIsoDate(input.deadline)) return null;
       values.deadline = input.deadline;
     }
   }
@@ -59,6 +63,7 @@ async function updateGoal(req, res) {
   const values = getGoalValues(req.body, true);
   if (!values || Object.keys(values).length === 0) return res.status(400).json({ error: "Nenhuma alteração válida foi informada." });
   const { data, error } = await req.supabase.from("financial_goals").update(values).eq("id", req.params.id).eq("user_id", req.user.id).select("id, name, target_amount, saved_amount, deadline, created_at").maybeSingle();
+  if (isInvalidIdError(error)) return res.status(404).json({ error: "Meta não encontrada." });
   if (error) {
     console.error("Erro ao atualizar meta:", error.message);
     return res.status(500).json({ error: "Erro ao atualizar meta financeira." });
@@ -69,6 +74,7 @@ async function updateGoal(req, res) {
 
 async function deleteGoal(req, res) {
   const { data, error } = await req.supabase.from("financial_goals").delete().eq("id", req.params.id).eq("user_id", req.user.id).select("id").maybeSingle();
+  if (isInvalidIdError(error)) return res.status(404).json({ error: "Meta não encontrada." });
   if (error) {
     console.error("Erro ao excluir meta:", error.message);
     return res.status(500).json({ error: "Erro ao excluir meta financeira." });

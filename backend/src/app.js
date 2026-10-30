@@ -3,6 +3,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const { createCorsOptions } = require("./config/cors");
+const { getSupabaseConfig } = require("./config/supabase");
 
 const authRoutes = require("./routes/authRoutes");
 const transactionRoutes = require("./routes/transactionRoutes");
@@ -13,6 +14,8 @@ const billRoutes = require("./routes/billRoutes");
 const { apiLimiter } = require("./middlewares/rateLimiters");
 
 const app = express();
+
+app.disable("x-powered-by");
 
 if (process.env.NODE_ENV === "production") {
   const trustProxyHops = process.env.TRUST_PROXY_HOPS || "1";
@@ -33,6 +36,10 @@ app.get("/", (req, res) => {
   });
 });
 
+app.get("/health", (req, res) => {
+  res.json({ status: "ok" });
+});
+
 app.use("/api", apiLimiter);
 app.use("/api/auth", authRoutes);
 app.use("/api/transactions", transactionRoutes);
@@ -41,7 +48,22 @@ app.use("/api/goals", goalRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/bills", billRoutes);
 
+app.use((req, res) => {
+  res.status(404).json({ error: "Rota não encontrada." });
+});
+
 app.use((err, req, res, next) => {
+  if (res.headersSent) return next(err);
+
+  // Erros do body-parser são culpa do cliente, não do servidor.
+  if (err.type === "entity.parse.failed") {
+    return res.status(400).json({ error: "JSON inválido na requisição." });
+  }
+
+  if (err.type === "entity.too.large") {
+    return res.status(413).json({ error: "Corpo da requisição grande demais." });
+  }
+
   console.error("Erro interno:", err.message);
 
   res.status(err.status || 500).json({
@@ -49,8 +71,19 @@ app.use((err, req, res, next) => {
   });
 });
 
-const PORT = process.env.PORT || 3000;
+function start() {
+  // Falha cedo, com mensagem clara, se o Supabase não estiver configurado.
+  getSupabaseConfig();
 
-app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
-});
+  const PORT = process.env.PORT || 3000;
+
+  return app.listen(PORT, () => {
+    console.log(`Servidor rodando na porta ${PORT}`);
+  });
+}
+
+if (require.main === module) {
+  start();
+}
+
+module.exports = { app, start };

@@ -1,67 +1,77 @@
 import { useState } from "react";
-import { uploadAvatar } from "../services/avatar";
+import { ArrowRight, UserRound } from "lucide-react";
+import { useNavigate } from "react-router";
+import BrandMark from "../components/ui/BrandMark";
+import { createProfile } from "../services/api";
 
-export function AvatarUpload({ userId, currentAvatarUrl, onUploadSuccess }) {
-  const [preview, setPreview] = useState(currentAvatarUrl || "/default-avatar.png");
+const USERNAME_PATTERN = /^[A-Za-z0-9_]{3,20}$/;
+
+// Tela exibida quando a conta existe mas ainda não tem perfil (rota /profile/setup).
+// A foto de perfil pode ser definida depois, em Configurações.
+export default function ProfileSetup({ onProfileCreated, onLogout }) {
+  const navigate = useNavigate();
+  const [username, setUsername] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  async function handleSubmit(event) {
+    event.preventDefault();
+    setError("");
 
-    // Preview local imediato
-    const objectUrl = URL.createObjectURL(file);
-    setPreview(objectUrl);
+    const trimmed = username.trim();
+    if (!USERNAME_PATTERN.test(trimmed)) {
+      setError("Use de 3 a 20 letras, números ou underscore no username.");
+      return;
+    }
 
     setLoading(true);
     try {
-      // Faz o upload direto para o bucket 'avatars' no Supabase Storage
-      const publicUrl = await uploadAvatar(file, userId);
-
-      if (onUploadSuccess) {
-        onUploadSuccess(publicUrl);
-      }
-    } catch (error) {
-      console.error("Erro ao enviar foto de perfil:", error);
+      const profile = await createProfile({ username: trimmed });
+      onProfileCreated(profile);
+      navigate("/dashboard", { replace: true });
+    } catch (requestError) {
+      setError(requestError.response?.data?.error || "Não foi possível concluir seu perfil.");
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   return (
-    <div className="flex flex-col items-center gap-3">
-      <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-gray-300">
-        <img
-          src={preview}
-          alt="Foto de perfil"
-          className="w-full h-full object-cover"
-        />
-        {loading && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-xs">
-            Carregando...
-          </div>
-        )}
-      </div>
+    <main className="login-scene">
+      <div className="login-glow" />
+      <section className="login-card">
+        <div className="login-brand"><BrandMark /></div>
+        <span className="eyebrow">QUASE LÁ</span>
+        <h1>Complete seu perfil</h1>
+        <p>Escolha o nome de usuário que aparecerá no seu painel.</p>
 
-      <label className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-md font-medium transition">
-        Escolher foto
-        <input
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={handleFileChange}
-        />
-      </label>
-    </div>
-  );
-}
+        <form onSubmit={handleSubmit}>
+          <label>
+            <span>Nome de usuário</span>
+            <div className="input-wrap">
+              <UserRound size={16} />
+              <input
+                autoComplete="username"
+                required
+                minLength={3}
+                maxLength={20}
+                pattern="[A-Za-z0-9_]+"
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
+                placeholder="seu_username"
+              />
+            </div>
+          </label>
+          {error && <div className="login-error" role="alert">{error}</div>}
+          <button className="login-submit" disabled={loading}>
+            {loading ? "Salvando…" : "Continuar"}<ArrowRight size={16} />
+          </button>
+        </form>
 
-// Export default exigido pelo App.jsx
-export default function ProfileSetup() {
-  return (
-    <div className="module-page p-6">
-      <h2 className="text-xl font-bold mb-4">Configuração Inicial de Perfil</h2>
-      <AvatarUpload />
-    </div>
+        <p className="auth-switch">
+          Não é você? <button type="button" onClick={onLogout}>Sair</button>
+        </p>
+      </section>
+    </main>
   );
 }

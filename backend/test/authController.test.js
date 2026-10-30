@@ -5,6 +5,7 @@ const {
   getAuthErrorResponse,
   getCurrentUser,
   getRegistrationErrorResponse,
+  isDuplicateEmailError,
   getUserDisplayName,
 } = require("../src/controllers/authController");
 
@@ -22,8 +23,8 @@ test("diferencia email não confirmado de credenciais inválidas", () => {
 
 test("traduz erros de cadastro sem expor detalhes internos", () => {
   assert.deepEqual(
-    getRegistrationErrorResponse({ code: "user_already_exists" }),
-    { status: 409, message: "Já existe uma conta com este email." },
+    getRegistrationErrorResponse({ code: "weak_password" }),
+    { status: 400, message: "A senha não atende aos requisitos de segurança." },
   );
   assert.deepEqual(
     getRegistrationErrorResponse({ message: "Database error saving new user" }),
@@ -83,4 +84,13 @@ test("retorna somente os dados públicos do usuário autenticado", () => {
     email: "usuario@example.com",
     name: "Ryan Souza",
   });
+});
+
+test("trata e-mail já cadastrado como duplicado sem expô-lo como erro de cadastro", () => {
+  assert.equal(isDuplicateEmailError({ code: "user_already_exists" }), true);
+  assert.equal(isDuplicateEmailError({ code: "email_exists" }), true);
+  assert.equal(isDuplicateEmailError({ code: "weak_password" }), false);
+
+  // O 409 "Já existe uma conta com este email" não existe mais: permitiria enumerar usuários.
+  assert.notEqual(getRegistrationErrorResponse({ code: "user_already_exists" }).status, 409);
 });

@@ -129,19 +129,6 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* Campo de URL Manual */}
-          <label>
-            URL do avatar (opcional)
-            <input
-              type="url"
-              value={form.avatar_url}
-              onChange={(event) =>
-                setForm({ ...form, avatar_url: event.target.value })
-              }
-              placeholder="https://…"
-            />
-          </label>
-
           {message.text && (
             <div
               className={
