@@ -102,38 +102,31 @@ body {
   pointer-events: none;
 }
 
+/* --- HEADER ADAPTADO PARA MOBILE-FIRST --- */
 .dashboard-header, .dashboard-content, .data-error { position: relative; z-index: 1; }
-/* O header precisa ficar acima do conteúdo (foto de perfil/painel direito) para que o popover de menu receba os cliques */
-.dashboard-header { z-index: 5; }
-.dashboard-header { height: 58px; display: grid; grid-template-columns: minmax(250px, 1fr) 377px 260px; align-items: start; }
 .dashboard-title { display: flex; align-items: center; gap: 7px; padding-top: 9px; }
 .dashboard-title h1 { margin: 0; font-size: 20px; line-height: 1; font-weight: 600; letter-spacing: -.5px; }
 
 .metrics-bar {
-  transform: translateX(-27px);
-  height: 42px;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  padding: 0 6px;
+  padding: 6px;
   border: 1px solid rgba(255,255,255,.045);
   border-radius: 17px;
   background: linear-gradient(180deg, rgba(76,71,74,.6), rgba(53,49,52,.62));
   box-shadow: 0 8px 25px rgba(0,0,0,.13), inset 0 1px 0 rgba(255,255,255,.035);
 }
 .metrics-bar.is-loading { opacity: .6; }
-.header-metric { min-width: 0; display: flex; align-items: center; justify-content: center; gap: 7px; position: relative; }
+
+.header-metric { min-width: 0; display: flex; align-items: center; justify-content: center; gap: 7px; position: relative; padding: 0 10px; }
 .header-metric + .header-metric::before { content: ""; position: absolute; left: 0; width: 1px; height: 21px; background: rgba(255,255,255,.06); }
 .header-metric > span:last-child { display: grid; gap: 1px; min-width: 0; }
 .header-metric small { color: #8f888b; font-size: 7px; line-height: 1; }
 .header-metric strong { color: #e5dfdb; font-size: 10px; line-height: 1.1; white-space: nowrap; letter-spacing: .02em; }
 .metric-icon { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; color: #b6aeb0; background: rgba(255,255,255,.05); }
 
-.header-actions { display: flex; justify-content: space-between; padding-left: 43px; padding-right: 1px; }
-.header-actions { position: relative; }
 .round-action { position: relative; display: grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 50%; color: #aaa2a4; background: rgba(58,52,57,.56); cursor: pointer; transition: background .2s, color .2s; }
 .round-action:hover { color: var(--text); background: rgba(76,67,72,.8); }
 .notification-dot { position: absolute; right: 8px; top: 7px; width: 4px; height: 4px; border-radius: 50%; background: #d95563; box-shadow: 0 0 0 2px rgba(217,85,99,.14); }
-.header-popover { position: absolute; z-index: 20; right: 0; top: 42px; width: 190px; padding: 12px; border: 1px solid rgba(255,255,255,.08); border-radius: 12px; background: rgba(34,30,34,.98); box-shadow: 0 16px 38px rgba(0,0,0,.36); }
+.header-popover { position: absolute; z-index: 20; width: 190px; padding: 12px; border: 1px solid rgba(255,255,255,.08); border-radius: 12px; background: rgba(34,30,34,.98); box-shadow: 0 16px 38px rgba(0,0,0,.36); }
 .header-popover strong, .header-popover span { display: block; }
 .header-popover strong { margin-bottom: 4px; font-size: 10px; }
 .header-popover span { color: var(--muted); font-size: 8px; }
@@ -141,7 +134,8 @@ body {
 .menu-popover button { padding: 8px; border: 0; border-radius: 8px; color: #bdb4b6; background: transparent; text-align: left; font-size: 9px; cursor: pointer; }
 .menu-popover button:hover { color: var(--text); background: rgba(255,255,255,.05); }
 
-.dashboard-content { display: grid; grid-template-columns: minmax(0, 1fr) 268px; gap: 28px; height: calc(100% - 58px); }
+/* --- CONTEÚDO PRINCIPAL --- */
+.dashboard-content { display: grid; grid-template-columns: minmax(0, 1fr) 268px; gap: 28px; height: calc(100% - 58px); padding-top: 20px;}
 .main-column { min-width: 0; }
 .section-heading { height: 38px; display: flex; align-items: flex-start; justify-content: space-between; }
 .section-heading h2, .lower-heading h2, .last-transaction h2 { margin: 0; font-size: 14px; font-weight: 600; letter-spacing: -.15px; }
@@ -241,6 +235,7 @@ body {
 .data-error { position: absolute; top: 70px; right: 300px; padding: 6px 10px; border-radius: 8px; color: #e9ae8a; background: rgba(108,43,31,.82); font-size: 9px; }
 .data-empty { position: absolute; z-index: 2; top: 70px; right: 300px; padding: 6px 10px; border-radius: 8px; color: #aca3a5; background: rgba(44,39,43,.9); font-size: 9px; }
 
+/* Modal e Sidebar foram mantidos originais */
 .dialog-backdrop { position: fixed; z-index: 100; inset: 0; display: grid; place-items: center; padding: 24px; background: rgba(7,6,7,.68); backdrop-filter: blur(10px); }
 .transactions-dialog { width: min(620px, 100%); max-height: min(680px, calc(100vh - 48px)); overflow: hidden; border: 1px solid rgba(255,255,255,.08); border-radius: 24px; background: linear-gradient(145deg, rgba(52,47,50,.98), rgba(30,27,30,.98)); box-shadow: 0 30px 90px rgba(0,0,0,.55); }
 .transactions-dialog > header { height: 86px; padding: 22px 24px 16px; display: flex; align-items: flex-start; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,.055); }
@@ -274,6 +269,7 @@ body {
 .sidebar-button:hover::after, .sidebar-button:focus-visible::after { opacity: 1; transform: translateX(0); }
 .sidebar-logout { margin-top: auto; }
 
+/* ... (Todo o CSS de Autenticação/Login foi mantido intacto) ... */
 .login-scene { min-height: 100vh; position: relative; display: grid; place-items: center; overflow: hidden; background: radial-gradient(circle at 50% 110%, rgba(210,93,28,.35), transparent 44%), linear-gradient(130deg, #111011, #211d20); }
 .login-scene::before { content: ""; position: absolute; inset: 0; opacity: .08; background-image: repeating-linear-gradient(115deg, transparent 0 40px, white 41px, transparent 42px 88px); filter: blur(4px); }
 .login-glow { position: absolute; width: 480px; height: 320px; bottom: -180px; border-radius: 50%; background: rgba(237,120,46,.34); filter: blur(55px); }
@@ -367,6 +363,15 @@ body {
 .informative-card p { margin: 0 auto 20px; max-width: 500px; color: var(--muted); font-size: 11px; line-height: 1.7; }
 .informative-card > div { display: inline-flex; align-items: center; gap: 7px; color: #75c7a5; font-size: 9px; }
 
+/* --- AQUI ADICIONAMOS A CLASSE PARA ESCONDER A BARRA DE SCROLL --- */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 @media (min-width: 1280px) {
   .dashboard-stage {
     width: min(1480px, calc(100vw - 48px));
@@ -374,34 +379,20 @@ body {
     grid-template-columns: 64px minmax(0, 1fr);
     gap: 20px;
   }
-
-  .dashboard-shell {
-    height: 820px;
-    padding: 32px 30px 24px 36px;
-    border-radius: 32px;
-  }
-
-  .dashboard-header {
-    height: 74px;
-    grid-template-columns: minmax(340px, 1fr) 500px 330px;
-  }
-
+  .dashboard-shell { height: 820px; padding: 32px 30px 24px 36px; border-radius: 32px; }
   .dashboard-title { padding-top: 11px; }
   .dashboard-title h1 { font-size: 25px; }
-  .metrics-bar { height: 52px; transform: translateX(-35px); border-radius: 20px; }
+
+  /* Removido o fixed width/grid do header aqui para o tailwind atuar */
+  
+  .metrics-bar { transform: translateX(-35px); border-radius: 20px; padding: 8px 16px; }
   .header-metric { gap: 10px; }
   .header-metric small { font-size: 9px; }
   .header-metric strong { font-size: 13px; }
   .metric-icon { width: 28px; height: 28px; }
   .header-actions { padding-left: 55px; }
   .round-action { width: 42px; height: 42px; }
-
-  .dashboard-content {
-    grid-template-columns: minmax(0, 1fr) 330px;
-    gap: 36px;
-    height: calc(100% - 74px);
-  }
-
+  .dashboard-content { grid-template-columns: minmax(0, 1fr) 330px; gap: 36px; height: calc(100% - 74px); }
   .section-heading { height: 46px; }
   .section-heading h2, .lower-heading h2 { font-size: 18px; }
   .filter-button { padding: 10px 18px; font-size: 10px; }
@@ -411,7 +402,6 @@ body {
   .chart-copy p { font-size: 10px; }
   .chart-legend { right: 22px; top: 22px; gap: 18px; font-size: 9px; }
   .chart-wrap { inset: 62px 21px 15px; }
-
   .lower-grid { margin-top: 120px; gap: 16px; }
   .lower-heading { height: 34px; }
   .lower-heading button { font-size: 10px; }
@@ -425,7 +415,6 @@ body {
   .positive-rate { font-size: 8px; }
   .savings-bars { height: 84px; gap: 11px; }
   .savings-bars i { width: 12px; }
-
   .right-panel { padding-left: 26px; }
   .profile-card { height: 150px; padding-top: 20px; }
   .profile-avatar { width: 60px; height: 60px; margin-bottom: 9px; }
@@ -447,7 +436,6 @@ body {
   .transaction-copy strong, .transaction-value { font-size: 10px; }
   .transaction-copy small { font-size: 8px; }
   .see-all { height: 42px; font-size: 10px; }
-
   .sidebar { height: 510px; padding: 16px 0; border-radius: 33px; }
   .sidebar-brand { width: 48px; height: 48px; }
   .sidebar-nav { margin-top: 35px; gap: 22px; }
@@ -457,7 +445,6 @@ body {
 @media (max-width: 1000px) {
   .dashboard-stage { width: calc(100vw - 24px); grid-template-columns: 50px minmax(0,1fr); gap: 10px; }
   .dashboard-shell { padding-left: 20px; padding-right: 16px; }
-  .dashboard-header { grid-template-columns: minmax(190px,1fr) 340px 220px; }
   .dashboard-content { grid-template-columns: minmax(0,1fr) 220px; gap: 18px; }
   .quick-actions { gap: 4px; }
   .quick-actions button > span { width: 38px; height: 40px; }
@@ -467,9 +454,8 @@ body {
   .app-scene { overflow: visible; padding: 12px 12px 78px; }
   .dashboard-stage { width: 100%; min-height: 0; display: block; }
   .dashboard-shell { height: auto; min-height: 0; padding: 18px; border-radius: 24px; overflow: visible; }
-  .dashboard-header { height: auto; grid-template-columns: 1fr auto; gap: 14px; }
-  .metrics-bar { transform: none; }
-  .metrics-bar { grid-column: 1 / -1; grid-row: 2; width: 100%; }
+  
+  /* Ajustes do metrics-bar removidos daqui para deixarmos o JSX fazer a magia do Flexbox */
   .header-actions { grid-column: 2; grid-row: 1; gap: 8px; padding: 0; }
   .dashboard-content { height: auto; margin-top: 22px; display: block; }
   .lower-grid { margin-top: 36px; }
@@ -493,10 +479,9 @@ body {
 @media (max-width: 560px) {
   .dashboard-shell { padding: 16px 12px; }
   .dashboard-title h1 { font-size: 17px; }
-  .metrics-bar { height: auto; padding: 6px 2px; }
-  .header-metric { gap: 4px; }
+  .header-metric { gap: 4px; padding: 0 6px; }
   .metric-icon { display: none; }
-  .header-metric strong { font-size: 8px; }
+  .header-metric strong { font-size: 11px; }
   .chart-card { height: 235px; }
   .chart-legend { top: 45px; left: 20px; right: auto; }
   .chart-wrap { top: 65px; }
