@@ -9,13 +9,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-
-const formatMoney = (value) =>
-  new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    maximumFractionDigits: 2,
-  }).format(Number(value) || 0);
+import { formatMoney } from "../../utils/money";
 
 const SERIES = [
   { key: "income", label: "Receitas", color: "#e67535" },

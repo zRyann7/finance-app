@@ -1,5 +1,4 @@
-const formatMoney = (value) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(value) || 0);
+import { formatMoney } from "../../utils/money";
 
 export default function OtherSavings({ summary, chartData }) {
   const maximum = Math.max(...chartData.map((item) => Math.abs(item.balance)), 1);

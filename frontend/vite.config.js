@@ -61,5 +61,12 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 5173,
     },
+    // Vitest (npm test): ambiente de navegador simulado e fuso fixo, para os testes de data
+    // darem o mesmo resultado em qualquer máquina.
+    test: {
+      environment: "jsdom",
+      globalSetup: ["./vitest.global-setup.js"],
+      setupFiles: ["./src/test/setup.js"],
+    },
   };
 });

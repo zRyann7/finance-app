@@ -1,18 +1,25 @@
-import { useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { Navigate, Outlet, Route, Routes } from "react-router";
 import AppLayout from "./components/layout/AppLayout";
-import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
-import Register from "./pages/Register";
-import ProfileSetup from "./pages/ProfileSetup";
-import Transactions from "./pages/Transactions";
-import TransactionForm from "./pages/TransactionForm";
-import GoalsPage from "./pages/GoalsPage";
-import Bills from "./pages/Bills";
-import SettingsPage from "./pages/SettingsPage";
-import Transfers from "./pages/Transfers";
 import { getProfile, logout } from "./services/api";
 import { clearSession, getSession, saveSession } from "./services/session";
+
+// Cada página vira um chunk separado, carregado só quando a rota é aberta (o Dashboard, com
+// Recharts e framer-motion, deixa de pesar no carregamento da tela de login).
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Register = lazy(() => import("./pages/Register"));
+const ProfileSetup = lazy(() => import("./pages/ProfileSetup"));
+const Transactions = lazy(() => import("./pages/Transactions"));
+const TransactionForm = lazy(() => import("./pages/TransactionForm"));
+const GoalsPage = lazy(() => import("./pages/GoalsPage"));
+const Bills = lazy(() => import("./pages/Bills"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const Transfers = lazy(() => import("./pages/Transfers"));
+
+function PageFallback() {
+  return <main className="login-scene"><div className="auth-status-card">Carregando…</div></main>;
+}
 
 function ProtectedRoute({ session }) {
   return session ? <Outlet /> : <Navigate to="/login" replace />;
@@ -63,7 +70,7 @@ export default function App() {
     try {
       await logout();
     } catch {
-      // A sessão local sempre deve ser removida, mesmo se a API estiver indisponível.
+
     } finally {
       clearSession();
       setSession(null);
@@ -78,6 +85,7 @@ export default function App() {
   const layoutContext = { session, profile: profileState.data, profileStatus: profileState.status, onLogout: handleLogout, onProfileChange: handleProfile };
 
   return (
+    <Suspense fallback={<PageFallback />}>
     <Routes>
       <Route path="/login" element={session ? <Navigate to="/dashboard" replace /> : <Login onAuthenticated={handleAuthenticated} />} />
       <Route path="/register" element={session ? <Navigate to="/dashboard" replace /> : <Register onAuthenticated={handleAuthenticated} />} />
@@ -98,5 +106,6 @@ export default function App() {
       <Route path="/" element={<Navigate to={session ? "/dashboard" : "/login"} replace />} />
       <Route path="*" element={<Navigate to={session ? "/dashboard" : "/login"} replace />} />
     </Routes>
+    </Suspense>
   );
 }

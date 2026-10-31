@@ -3,9 +3,8 @@ import { Edit3, Plus, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router";
 import ModuleHeader from "../components/ui/ModuleHeader";
 import { TRANSACTIONS_LIMIT, deleteTransaction, getTransactions, updateTransaction } from "../services/api";
-import { INVALID_AMOUNT_MESSAGE, parseBRL, toInputAmount } from "../utils/money";
+import { INVALID_AMOUNT_MESSAGE, formatMoney, parseBRL, toInputAmount } from "../utils/money";
 
-const money = (value) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(value) || 0);
 // Aceita "AAAA-MM-DD" e timestamps ISO; data inválida vira "Sem data" em vez de derrubar a tela.
 const date = (value) => {
   if (!value) return "Sem data";
@@ -85,7 +84,7 @@ export default function Transactions() {
           <article className="module-list-row" key={item.id}>
             <span className={`list-indicator ${item.type}`} />
             <div><strong>{item.description}</strong><small>{date(item.date)} · {item.type === "income" ? "Receita" : "Despesa"}</small></div>
-            <b className={item.type}>{item.type === "income" ? "+" : "−"}{money(item.amount)}</b>
+            <b className={item.type}>{item.type === "income" ? "+" : "−"}{formatMoney(item.amount)}</b>
             <button aria-label={`Editar ${item.description}`} onClick={() => openEditor(item)}><Edit3 size={15} /></button>
             <button aria-label={`Excluir ${item.description}`} onClick={() => remove(item)}><Trash2 size={15} /></button>
           </article>

@@ -1,7 +1,5 @@
 import { motion } from "framer-motion";
-
-const formatMoney = (value) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(value) || 0);
+import { formatMoney } from "../../utils/money";
 
 function normalizeGoal(goal) {
   const target = Number(goal.target_amount ?? goal.target ?? goal.amount ?? 0);

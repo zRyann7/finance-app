@@ -3,9 +3,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { useSearchParams } from "react-router";
 import ModuleHeader from "../components/ui/ModuleHeader";
 import { createGoal, deleteGoal, getGoals, updateGoal } from "../services/api";
-import { INVALID_AMOUNT_MESSAGE, parseBRL, toInputAmount } from "../utils/money";
-
-const money = (value) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(value) || 0);
+import { INVALID_AMOUNT_MESSAGE, formatMoney, parseBRL, toInputAmount } from "../utils/money";
 
 export default function GoalsPage() {
   const [params] = useSearchParams();
@@ -67,7 +65,7 @@ export default function GoalsPage() {
       <section className="module-grid">
         {status.loading && <p className="module-empty">Carregando metas…</p>}
         {!status.loading && items.length === 0 && <p className="module-empty">Você ainda não cadastrou metas.</p>}
-        {items.map((goal) => { const progress = Math.min(100, Math.round((Number(goal.saved_amount) / Number(goal.target_amount)) * 100) || 0); return <article className="module-card goal-module-card" key={goal.id}><div className="module-card-heading"><div><span>{progress}% concluído</span><h2>{goal.name}</h2></div><button aria-label={`Excluir ${goal.name}`} onClick={() => remove(goal)}><Trash2 size={15} /></button></div><div className="progress-track"><div className="progress-value" style={{ width: `${progress}%` }} /></div><p>{money(goal.saved_amount)} de {money(goal.target_amount)}</p><button className="text-action" onClick={() => changeProgress(goal)}>Atualizar progresso</button></article>; })}
+        {items.map((goal) => { const progress = Math.min(100, Math.round((Number(goal.saved_amount) / Number(goal.target_amount)) * 100) || 0); return <article className="module-card goal-module-card" key={goal.id}><div className="module-card-heading"><div><span>{progress}% concluído</span><h2>{goal.name}</h2></div><button aria-label={`Excluir ${goal.name}`} onClick={() => remove(goal)}><Trash2 size={15} /></button></div><div className="progress-track"><div className="progress-value" style={{ width: `${progress}%` }} /></div><p>{formatMoney(goal.saved_amount)} de {formatMoney(goal.target_amount)}</p><button className="text-action" onClick={() => changeProgress(goal)}>Atualizar progresso</button></article>; })}
       </section>
     </div>
   );

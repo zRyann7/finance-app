@@ -1,8 +1,9 @@
+import { useRef } from "react";
 import { motion } from "framer-motion";
 import { Trash2, X } from "lucide-react";
-
-const formatMoney = (value) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(value) || 0);
+import { useDismiss } from "../../hooks/useDismiss";
+import { useFocusTrap } from "../../hooks/useFocusTrap";
+import { formatMoney } from "../../utils/money";
 
 function formatDate(value) {
   if (!value) return "Sem data";
@@ -11,6 +12,11 @@ function formatDate(value) {
 }
 
 export default function TransactionsDialog({ transactions, deletingId, onDelete, onClose }) {
+  const dialogRef = useRef(null);
+
+  useDismiss(onClose);
+  useFocusTrap(dialogRef);
+
   async function handleDelete(transaction) {
     const confirmed = window.confirm(
       `Excluir a transação “${transaction.description}”? Esta ação não pode ser desfeita.`,
@@ -28,6 +34,8 @@ export default function TransactionsDialog({ transactions, deletingId, onDelete,
   return (
     <div className="dialog-backdrop" role="presentation" onMouseDown={onClose}>
       <motion.section
+        ref={dialogRef}
+        tabIndex={-1}
         className="transactions-dialog"
         role="dialog"
         aria-modal="true"

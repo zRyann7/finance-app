@@ -1,9 +1,7 @@
 import { ArrowRight, UserRound } from "lucide-react";
 import QuickActions from "./QuickActions";
 import BankCard from "./BankCard";
-
-const formatMoney = (value) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(value) || 0);
+import { formatMoney } from "../../utils/money";
 
 const formatDate = (value) => {
   if (!value) return "";

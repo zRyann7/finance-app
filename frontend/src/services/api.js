@@ -1,12 +1,10 @@
 import axios from "axios";
+import { buildApiBaseUrl } from "../utils/apiUrl";
 import { clearSession, getSession, saveSession } from "./session";
 
 export const TRANSACTIONS_LIMIT = 500;
 
-// VITE_API_URL pode vir com ou sem o sufixo /api (http://localhost:3000 ou http://localhost:3000/api):
-// removemos barras finais e um /api final e acrescentamos /api uma única vez.
-const rawApiUrl = (import.meta.env.VITE_API_URL || "http://localhost:3000").trim();
-export const API_BASE_URL = `${rawApiUrl.replace(/\/+$/, "").replace(/\/api$/, "")}/api`;
+export const API_BASE_URL = buildApiBaseUrl(import.meta.env.VITE_API_URL);
 
 const api = axios.create({
   baseURL: API_BASE_URL,

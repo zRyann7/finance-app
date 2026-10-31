@@ -3,7 +3,7 @@ import { Save, UserRound, Upload, Loader2 } from "lucide-react";
 import { useOutletContext } from "react-router";
 import ModuleHeader from "../components/ui/ModuleHeader";
 import { updateProfile } from "../services/api";
-import { uploadAvatar } from "../services/avatar"; // Ou './ProfileSetup' se a função estiver lá
+import { removeAvatar, uploadAvatar } from "../services/avatar";
 
 export default function SettingsPage() {
   const { session, profile, onProfileChange } = useOutletContext();
@@ -26,6 +26,11 @@ export default function SettingsPage() {
     try {
       // 1. Faz o upload para o Supabase Storage
       const publicUrl = await uploadAvatar(file, session?.user?.id);
+
+      // Se já havia uma foto enviada nesta tela e ainda não salva, ela vira lixo no bucket.
+      if (form.avatar_url && form.avatar_url !== profile?.avatar_url) {
+        removeAvatar(form.avatar_url, session?.user?.id);
+      }
 
       // 2. Preenche o estado do avatar com a URL gerada
       setForm((prev) => ({ ...prev, avatar_url: publicUrl }));
@@ -54,6 +59,12 @@ export default function SettingsPage() {
         avatar_url: form.avatar_url.trim() || null
       });
       onProfileChange(updated);
+
+      // A foto que estava no perfil foi substituída: apaga o arquivo antigo do bucket.
+      if (profile?.avatar_url && profile.avatar_url !== updated.avatar_url) {
+        removeAvatar(profile.avatar_url, session?.user?.id);
+      }
+
       setMessage({ type: "success", text: "Perfil atualizado com sucesso." });
     } catch (error) {
       setMessage({

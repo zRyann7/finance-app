@@ -32,3 +32,10 @@ export function toInputAmount(value) {
   const number = Number(value);
   return Number.isFinite(number) ? number.toFixed(2).replace(".", ",") : "";
 }
+
+const currencyFormatter = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+
+// Valor numérico (ou texto numérico) -> "R$ 1.234,56". Valores inválidos viram R$ 0,00.
+export function formatMoney(value) {
+  return currencyFormatter.format(Number(value) || 0);
+}

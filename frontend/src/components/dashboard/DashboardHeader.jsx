@@ -1,13 +1,8 @@
 import { useState } from "react";
 import { Bell, CreditCard, MoreVertical, WalletCards } from "lucide-react";
 import { useNavigate } from "react-router";
-
-const formatMoney = (value) =>
-  new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 2,
-  }).format(Number(value));
+import { useDismiss } from "../../hooks/useDismiss";
+import { formatMoney } from "../../utils/money";
 
 function Metric({ icon: Icon, label, value }) {
   // flex-shrink-0 + largura mínima no mobile (ver .header-metric no CSS): os cards
@@ -26,6 +21,9 @@ function Metric({ icon: Icon, label, value }) {
 export default function DashboardHeader({ summary, loading, notificationCount = 0 }) {
   const navigate = useNavigate();
   const [openPanel, setOpenPanel] = useState(null);
+
+  // Escape ou clique fora dos botões/popovers fecha o painel aberto.
+  useDismiss(() => setOpenPanel(null), { active: openPanel !== null, insideSelector: ".header-actions" });
 
   // Os mesmos botões são exibidos em dois lugares (linha do título no mobile, canto direito no
   // desktop). É um elemento JSX, e não um componente interno, para o React não remontá-lo a cada render.

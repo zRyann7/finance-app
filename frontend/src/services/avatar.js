@@ -1,4 +1,5 @@
 import { getFreshAccessToken } from "./api";
+import { avatarPathFromUrl } from "../utils/avatarPath";
 import { createSupabaseWithToken } from "./supabase";
 
 export const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
@@ -45,4 +46,20 @@ export async function uploadAvatar(file, userId) {
   }
 
   return storage.getPublicUrl(filePath).data.publicUrl;
+}
+
+// Apaga do bucket um avatar que deixou de ser usado. É "melhor esforço": se falhar (rede, arquivo
+// já removido, formato antigo fora da pasta do usuário), o app segue normalmente.
+export async function removeAvatar(url, userId) {
+  const path = avatarPathFromUrl(url, userId);
+  if (!path) return;
+
+  try {
+    const accessToken = await getFreshAccessToken();
+    if (!accessToken) return;
+
+    await createSupabaseWithToken(accessToken).storage.from("avatars").remove([path]);
+  } catch {
+    // Arquivo órfão não afeta o usuário.
+  }
 }
