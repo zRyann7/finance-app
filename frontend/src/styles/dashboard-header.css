@@ -1,0 +1,44 @@
+/* Cabeçalho do dashboard: título, barra de métricas, ações e popovers. */
+
+.dashboard-header, .dashboard-content, .data-error { position: relative; z-index: 1; }
+/* Acima do conteúdo (também z-index 1, e depois dele no DOM) para os popovers do header não ficarem por baixo. */
+.dashboard-header { z-index: 30; }
+.dashboard-title { display: flex; align-items: center; gap: 7px; padding-top: 9px; }
+.dashboard-title h1 { margin: 0; font-size: 20px; line-height: 1; font-weight: 600; letter-spacing: -.5px; }
+
+.metrics-bar {
+  padding: 6px;
+  border: 1px solid rgba(255,255,255,.045);
+  border-radius: 17px;
+  background: linear-gradient(180deg, rgba(76,71,74,.6), rgba(53,49,52,.62));
+  box-shadow: 0 8px 25px rgba(0,0,0,.13), inset 0 1px 0 rgba(255,255,255,.035);
+}
+.metrics-bar.is-loading { opacity: .6; }
+
+.header-metric { min-width: 0; display: flex; align-items: center; justify-content: center; gap: 7px; position: relative; padding: 0 10px; }
+.header-metric + .header-metric::before { content: ""; position: absolute; left: 0; width: 1px; height: 21px; background: rgba(255,255,255,.06); }
+.header-metric > span:last-child { display: grid; gap: 1px; min-width: 0; }
+.header-metric small { color: #8f888b; font-size: 7px; line-height: 1; }
+.header-metric strong { color: #e5dfdb; font-size: 10px; line-height: 1.1; white-space: nowrap; letter-spacing: .02em; }
+.metric-icon { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; color: #b6aeb0; background: rgba(255,255,255,.05); }
+
+.header-actions { position: relative; }
+.round-action { position: relative; display: grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 50%; color: #aaa2a4; background: rgba(58,52,57,.56); cursor: pointer; transition: background .2s, color .2s; }
+.round-action:hover { color: var(--text); background: rgba(76,67,72,.8); }
+.notification-dot { position: absolute; right: 8px; top: 7px; width: 4px; height: 4px; border-radius: 50%; background: #d95563; box-shadow: 0 0 0 2px rgba(217,85,99,.14); }
+.header-popover { position: absolute; z-index: 999; right: 0; top: calc(100% + 8px); width: 190px; padding: 12px; border: 1px solid rgba(255,255,255,.08); border-radius: 12px; background: rgba(34,30,34,.98); box-shadow: 0 16px 38px rgba(0,0,0,.36); }
+.header-popover strong, .header-popover span { display: block; }
+.header-popover strong { margin-bottom: 4px; font-size: 10px; }
+.header-popover span { color: var(--muted); font-size: 8px; }
+.menu-popover { display: grid; gap: 4px; }
+.menu-popover button { padding: 8px; border: 0; border-radius: 8px; color: #bdb4b6; background: transparent; text-align: left; font-size: 9px; cursor: pointer; }
+.menu-popover button:hover { color: var(--text); background: rgba(255,255,255,.05); }
+
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}

@@ -1,0 +1,74 @@
+/* Cenário do app: fundo, formas ambiente e a moldura (stage/shell) do dashboard. */
+
+.app-scene {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 78% 78%, rgba(153, 73, 29, .18), transparent 24%),
+    radial-gradient(circle at 22% 36%, rgba(92, 81, 71, .14), transparent 28%),
+    linear-gradient(112deg, #090a0b 0 9%, #151416 28%, #171315 75%, #271915 100%);
+}
+
+.app-scene::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 29px, rgba(255,255,255,.018) 30px 32px, transparent 34px 63px),
+    linear-gradient(90deg, rgba(0,0,0,.78) 0 8%, transparent 18% 77%, rgba(28,12,6,.2) 88%);
+  filter: blur(5px);
+  opacity: .64;
+}
+
+.ambient-shape { position: absolute; filter: blur(13px); pointer-events: none; }
+.ambient-left { left: -34px; bottom: 0; width: 125px; height: 510px; background: radial-gradient(ellipse at 60% 38%, #354734 0 11%, transparent 42%), linear-gradient(90deg, #070908, #20251f 72%, transparent); opacity: .6; }
+.ambient-right { right: -80px; bottom: -45px; width: 310px; height: 310px; border-radius: 48% 0 0; background: linear-gradient(145deg, #4b2b20, #bd6031 43%, #391b12 76%); opacity: .5; }
+
+.dashboard-stage {
+  position: relative;
+  z-index: 1;
+  width: min(1120px, calc(100vw - 32px));
+  min-height: 658px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+}
+
+.dashboard-shell {
+  position: relative;
+  z-index: 1;
+  height: 642px;
+  overflow: hidden;
+  padding: 25px 22px 18px 28px;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 28px;
+  background:
+    linear-gradient(118deg, rgba(49,48,50,.94), rgba(38,34,38,.93) 54%, rgba(29,24,29,.94)),
+    var(--surface);
+  box-shadow: 0 24px 75px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06);
+  backdrop-filter: blur(28px) saturate(115%);
+}
+
+.dashboard-shell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(115deg, rgba(255,255,255,.025), transparent 40% 70%, rgba(237,120,46,.025));
+}
+
+.orange-ambient {
+  position: absolute;
+  z-index: 0;
+  left: 13%;
+  bottom: -130px;
+  width: 600px;
+  height: 410px;
+  background: radial-gradient(ellipse, rgba(223,102,24,.58) 0%, rgba(184,72,12,.26) 35%, transparent 72%);
+  filter: blur(34px);
+  pointer-events: none;
+}

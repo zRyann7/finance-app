@@ -1,0 +1,30 @@
+/* Variáveis de tema, reset e estilos globais do <body>. */
+
+:root {
+  color-scheme: dark;
+  font-family: Inter, Manrope, "Segoe UI", sans-serif;
+  --bg: #151315;
+  --surface: rgba(39, 36, 39, 0.94);
+  --surface-deep: rgba(29, 26, 29, 0.9);
+  --card: rgba(54, 47, 51, 0.64);
+  --card-strong: rgba(61, 52, 56, 0.76);
+  --accent: #ed782e;
+  --accent-soft: #bf6a3d;
+  --text: #e9e3de;
+  --muted: #8d8587;
+  --line: rgba(255, 255, 255, 0.065);
+  --green: #5cc59c;
+}
+
+* { box-sizing: border-box; }
+html, body, #root { min-height: 100%; margin: 0; }
+button, input, select, textarea { font: inherit; }
+button { color: inherit; }
+button:focus-visible, input:focus-visible { outline: 2px solid rgba(237, 120, 46, .8); outline-offset: 2px; }
+
+body {
+  min-width: 320px;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+}
