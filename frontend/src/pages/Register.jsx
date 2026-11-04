@@ -2,7 +2,10 @@ import { useState } from "react";
 import { ArrowRight, LockKeyhole, Mail, UserRound } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import BrandMark from "../components/ui/BrandMark";
+import ServerWakeNotice from "../components/ui/ServerWakeNotice";
+import { useBackendWakeUp } from "../hooks/useBackendWakeUp";
 import { register } from "../services/api";
+import { describeRequestError } from "../utils/requestError";
 
 const USERNAME_PATTERN = /^[A-Za-z0-9_]{3,20}$/;
 
@@ -12,6 +15,7 @@ export default function Register({ onAuthenticated }) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const isWaking = useBackendWakeUp();
 
   function update(field, value) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -46,7 +50,7 @@ export default function Register({ onAuthenticated }) {
         navigate("/dashboard", { replace: true });
       }
     } catch (requestError) {
-      setError(requestError.response?.data?.error || "Não foi possível criar sua conta.");
+      setError(describeRequestError(requestError, "Não foi possível criar sua conta."));
     } finally {
       setLoading(false);
     }
@@ -67,6 +71,7 @@ export default function Register({ onAuthenticated }) {
             <label><span>Senha</span><div className="input-wrap"><LockKeyhole size={16} /><input type="password" autoComplete="new-password" required minLength={8} maxLength={72} value={form.password} onChange={(event) => update("password", event.target.value)} placeholder="••••••••" /></div></label>
             <label><span>Confirmar senha</span><div className="input-wrap"><LockKeyhole size={16} /><input type="password" autoComplete="new-password" required value={form.confirmPassword} onChange={(event) => update("confirmPassword", event.target.value)} placeholder="••••••••" /></div></label>
           </div>
+          {isWaking && <ServerWakeNotice />}
           {error && <div className="login-error" role="alert">{error}</div>}
           {success && <div className="login-success" role="status">{success}</div>}
           <button className="login-submit" disabled={loading || Boolean(success)}>{loading ? "Criando…" : "Criar conta"}<ArrowRight size={16} /></button>

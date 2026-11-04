@@ -1,10 +1,16 @@
 import axios from "axios";
-import { buildApiBaseUrl } from "../utils/apiUrl";
+import { buildApiBaseUrl, buildHealthUrl } from "../utils/apiUrl";
 import { clearSession, getSession, saveSession } from "./session";
 
 export const TRANSACTIONS_LIMIT = 500;
 
 export const API_BASE_URL = buildApiBaseUrl(import.meta.env.VITE_API_URL);
+const HEALTH_URL = buildHealthUrl(import.meta.env.VITE_API_URL);
+
+// Em hospedagem gratuita (ex.: Render) o servidor dorme após alguns minutos sem tráfego e a
+// primeira requisição pode levar cerca de 1 minuto. Login e cadastro costumam ser essa primeira
+// requisição, então eles toleram esperar; o resto da API segue com o timeout curto padrão.
+export const COLD_START_TIMEOUT_MS = 60000;
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -60,13 +66,18 @@ api.interceptors.response.use(
   },
 );
 
+// Acorda o backend (GET /health). Usa o axios puro, sem o interceptor de sessão/refresh.
+export async function pingBackend({ signal } = {}) {
+  await axios.get(HEALTH_URL, { timeout: COLD_START_TIMEOUT_MS, signal });
+}
+
 export async function login(credentials) {
-  const { data } = await api.post("/auth/login", credentials);
+  const { data } = await api.post("/auth/login", credentials, { timeout: COLD_START_TIMEOUT_MS });
   return data;
 }
 
 export async function register(credentials) {
-  const { data } = await api.post("/auth/register", credentials);
+  const { data } = await api.post("/auth/register", credentials, { timeout: COLD_START_TIMEOUT_MS });
   return data;
 }
 

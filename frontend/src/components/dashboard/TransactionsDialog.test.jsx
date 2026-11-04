@@ -1,7 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import DialogProvider from "../ui/DialogProvider";
 import TransactionsDialog from "./TransactionsDialog";
 
 const transactions = [
@@ -13,7 +14,7 @@ function Harness({ onDelete = vi.fn() }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <>
+    <DialogProvider>
       <button onClick={() => setOpen(true)}>Abrir histórico</button>
       {open && (
         <TransactionsDialog
@@ -23,7 +24,7 @@ function Harness({ onDelete = vi.fn() }) {
           onClose={() => setOpen(false)}
         />
       )}
-    </>
+    </DialogProvider>
   );
 }
 
@@ -79,19 +80,41 @@ describe("TransactionsDialog", () => {
     expect(document.activeElement).toBe(lastDelete);
   });
 
-  it("só exclui depois da confirmação", async () => {
+  it("só exclui depois da confirmação no diálogo do app", async () => {
     const user = userEvent.setup();
     const onDelete = vi.fn().mockResolvedValue(undefined);
-    const confirm = vi.spyOn(window, "confirm");
+    const nativeConfirm = vi.spyOn(window, "confirm");
     render(<Harness onDelete={onDelete} />);
     await user.click(screen.getByRole("button", { name: "Abrir histórico" }));
 
-    confirm.mockReturnValueOnce(false);
+    // Cancelar não exclui
     await user.click(screen.getByRole("button", { name: "Excluir Salário" }));
+    const confirmation = screen.getByRole("alertdialog", { name: "Excluir transação" });
+    await user.click(within(confirmation).getByRole("button", { name: "Cancelar" }));
+    expect(screen.queryByRole("alertdialog")).toBeNull();
     expect(onDelete).not.toHaveBeenCalled();
 
-    confirm.mockReturnValueOnce(true);
+    // Confirmar exclui
     await user.click(screen.getByRole("button", { name: "Excluir Salário" }));
+    await user.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Excluir" }));
     expect(onDelete).toHaveBeenCalledWith("t1");
+    expect(nativeConfirm).not.toHaveBeenCalled(); // nada de pop-up nativo do navegador
+  });
+
+  it("Escape fecha só a confirmação e mantém o histórico aberto", async () => {
+    const user = userEvent.setup();
+    const onDelete = vi.fn();
+    render(<Harness onDelete={onDelete} />);
+    await user.click(screen.getByRole("button", { name: "Abrir histórico" }));
+    await user.click(screen.getByRole("button", { name: "Excluir Salário" }));
+
+    await user.keyboard("{Escape}");
+
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    expect(screen.getByRole("dialog", { name: "Todas as transações" })).toBeTruthy();
+    expect(onDelete).not.toHaveBeenCalled();
+
+    await user.keyboard("{Escape}"); // agora sim fecha o histórico
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 });

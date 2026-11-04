@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { motion } from "framer-motion";
 import { Trash2, X } from "lucide-react";
 import { useDismiss } from "../../hooks/useDismiss";
+import { useDialogs } from "../../hooks/useDialogs";
 import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { formatMoney } from "../../utils/money";
 
@@ -13,14 +14,18 @@ function formatDate(value) {
 
 export default function TransactionsDialog({ transactions, deletingId, onDelete, onClose }) {
   const dialogRef = useRef(null);
+  const { confirm } = useDialogs();
 
   useDismiss(onClose);
   useFocusTrap(dialogRef);
 
   async function handleDelete(transaction) {
-    const confirmed = window.confirm(
-      `Excluir a transação “${transaction.description}”? Esta ação não pode ser desfeita.`,
-    );
+    const confirmed = await confirm({
+      title: "Excluir transação",
+      message: `Excluir a transação “${transaction.description}”? Esta ação não pode ser desfeita.`,
+      confirmLabel: "Excluir",
+      danger: true,
+    });
 
     if (!confirmed) return;
 

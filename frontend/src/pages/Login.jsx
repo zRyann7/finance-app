@@ -2,13 +2,17 @@ import { useState } from "react";
 import { ArrowRight, LockKeyhole, Mail } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import BrandMark from "../components/ui/BrandMark";
+import ServerWakeNotice from "../components/ui/ServerWakeNotice";
+import { useBackendWakeUp } from "../hooks/useBackendWakeUp";
 import { login } from "../services/api";
+import { describeRequestError } from "../utils/requestError";
 
 export default function Login({ onAuthenticated }) {
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const isWaking = useBackendWakeUp();
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -20,7 +24,7 @@ export default function Login({ onAuthenticated }) {
       onAuthenticated(session);
       navigate("/dashboard", { replace: true });
     } catch (requestError) {
-      setError(requestError.response?.data?.error || "Não foi possível entrar. Verifique se o backend está ativo.");
+      setError(describeRequestError(requestError, "Não foi possível entrar. Tente novamente em instantes."));
     } finally {
       setLoading(false);
     }
@@ -44,6 +48,7 @@ export default function Login({ onAuthenticated }) {
             <span>Senha</span>
             <div className="input-wrap"><LockKeyhole size={16} /><input type="password" autoComplete="current-password" required value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} placeholder="••••••••" /></div>
           </label>
+          {isWaking && <ServerWakeNotice />}
           {error && <div className="login-error" role="alert">{error}</div>}
           <button className="login-submit" disabled={loading}>{loading ? "Entrando…" : "Entrar"}<ArrowRight size={16} /></button>
         </form>

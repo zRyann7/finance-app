@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { useSearchParams } from "react-router";
 import ModuleHeader from "../components/ui/ModuleHeader";
+import { useDialogs } from "../hooks/useDialogs";
 import { createGoal, deleteGoal, getGoals, updateGoal } from "../services/api";
 import { INVALID_AMOUNT_MESSAGE, formatMoney, parseBRL, toInputAmount } from "../utils/money";
 
 export default function GoalsPage() {
+  const { confirm, prompt } = useDialogs();
   const [params] = useSearchParams();
   const [items, setItems] = useState([]);
   const [showForm, setShowForm] = useState(params.get("new") === "1");
@@ -38,13 +40,17 @@ export default function GoalsPage() {
   }
 
   async function changeProgress(goal) {
-    const next = window.prompt("Quanto já foi reservado para esta meta?", toInputAmount(goal.saved_amount));
+    const next = await prompt({
+      title: "Atualizar progresso",
+      message: `Quanto já foi reservado para “${goal.name}”?`,
+      label: "Valor reservado",
+      defaultValue: toInputAmount(goal.saved_amount),
+      inputMode: "decimal",
+      confirmLabel: "Salvar",
+      validate: (text) => (parseBRL(text) === null ? INVALID_AMOUNT_MESSAGE : ""),
+    });
     if (next === null) return;
     const saved_amount = parseBRL(next);
-    if (saved_amount === null) {
-      setStatus({ loading: false, error: INVALID_AMOUNT_MESSAGE });
-      return;
-    }
     try {
       const updated = await updateGoal(goal.id, { saved_amount });
       setItems((current) => current.map((item) => item.id === updated.id ? updated : item));
@@ -52,7 +58,13 @@ export default function GoalsPage() {
   }
 
   async function remove(goal) {
-    if (!window.confirm(`Excluir a meta “${goal.name}”?`)) return;
+    const confirmed = await confirm({
+      title: "Excluir meta",
+      message: `Excluir a meta “${goal.name}”? Esta ação não pode ser desfeita.`,
+      confirmLabel: "Excluir",
+      danger: true,
+    });
+    if (!confirmed) return;
     try { await deleteGoal(goal.id); setItems((current) => current.filter((item) => item.id !== goal.id)); }
     catch (error) { setStatus({ loading: false, error: error.response?.data?.error || "Não foi possível excluir a meta." }); }
   }

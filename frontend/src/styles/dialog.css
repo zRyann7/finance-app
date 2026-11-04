@@ -21,3 +21,20 @@
 .delete-transaction:hover { color: #ef8c78; background: rgba(203,75,54,.12); }
 .delete-transaction:disabled { opacity: .35; cursor: wait; }
 .transactions-empty { margin: 0; padding: 48px 16px; color: #8d8587; font-size: 11px; text-align: center; }
+
+/* Diálogos de confirmação e de entrada (no lugar de window.confirm / window.prompt).
+   Ficam acima de outros diálogos, como o histórico de transações. */
+.dialog-backdrop-top { z-index: 110; }
+.app-dialog { width: min(400px, 100%); padding: 24px; border: 1px solid rgba(255,255,255,.08); border-radius: 22px; outline: 0; background: linear-gradient(145deg, rgba(52,47,50,.98), rgba(30,27,30,.98)); box-shadow: 0 30px 90px rgba(0,0,0,.55); }
+.app-dialog h2 { margin: 0 0 8px; font-size: 16px; font-weight: 600; }
+.app-dialog p { margin: 0; color: #aba1a4; font-size: 11px; line-height: 1.55; overflow-wrap: anywhere; }
+.app-dialog-field { display: grid; gap: 7px; margin-top: 16px; color: #aba1a4; font-size: 9px; }
+.app-dialog-field input { width: 100%; height: 43px; padding: 0 12px; border: 1px solid rgba(255,255,255,.065); border-radius: 11px; outline: 0; color: var(--text); background: rgba(25,22,25,.52); font-size: 11px; }
+.app-dialog-field input:focus { border-color: rgba(237,120,46,.38); }
+.app-dialog-field input[aria-invalid="true"] { border-color: rgba(217,85,99,.65); }
+.app-dialog-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 22px; }
+.app-dialog-actions button { min-height: 38px; padding: 0 16px; border-radius: 10px; font-size: 11px; font-weight: 600; cursor: pointer; }
+.app-dialog-actions button:focus-visible { outline: 2px solid rgba(237,120,46,.6); outline-offset: 2px; }
+.app-dialog-cancel { border: 1px solid var(--line); color: var(--muted); background: rgba(255,255,255,.025); }
+.app-dialog-confirm { border: 0; color: white; background: linear-gradient(135deg, #ed782e, #c75b24); }
+.app-dialog-confirm.is-danger { background: linear-gradient(135deg, #d9534f, #a93a2f); }

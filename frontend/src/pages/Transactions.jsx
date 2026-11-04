@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Edit3, Plus, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router";
 import ModuleHeader from "../components/ui/ModuleHeader";
+import { useDialogs } from "../hooks/useDialogs";
 import { TRANSACTIONS_LIMIT, deleteTransaction, getTransactions, updateTransaction } from "../services/api";
 import { INVALID_AMOUNT_MESSAGE, formatMoney, parseBRL, toInputAmount } from "../utils/money";
 
@@ -14,6 +15,7 @@ const date = (value) => {
 
 export default function Transactions() {
   const navigate = useNavigate();
+  const { confirm } = useDialogs();
   const [items, setItems] = useState([]);
   const [filter, setFilter] = useState("all");
   const [editing, setEditing] = useState(null);
@@ -34,7 +36,13 @@ export default function Transactions() {
   const visible = useMemo(() => filter === "all" ? items : items.filter((item) => item.type === filter), [filter, items]);
 
   async function remove(item) {
-    if (!window.confirm(`Excluir “${item.description}”?`)) return;
+    const confirmed = await confirm({
+      title: "Excluir movimentação",
+      message: `Excluir “${item.description}”? Esta ação não pode ser desfeita.`,
+      confirmLabel: "Excluir",
+      danger: true,
+    });
+    if (!confirmed) return;
     try {
       await deleteTransaction(item.id);
       setItems((current) => current.filter((candidate) => candidate.id !== item.id));

@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { Plus, Power, Trash2 } from "lucide-react";
 import ModuleHeader from "../components/ui/ModuleHeader";
+import { useDialogs } from "../hooks/useDialogs";
 import { createBill, deleteBill, getBills, updateBill } from "../services/api";
 import { INVALID_AMOUNT_MESSAGE, formatMoney, parseBRL } from "../utils/money";
 
 export default function Bills() {
+  const { confirm } = useDialogs();
   const [items, setItems] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ description: "", amount: "", due_day: "" });
@@ -34,7 +36,13 @@ export default function Bills() {
   }
 
   async function remove(item) {
-    if (!window.confirm(`Excluir a conta “${item.description}”?`)) return;
+    const confirmed = await confirm({
+      title: "Excluir conta recorrente",
+      message: `Excluir a conta “${item.description}”? Esta ação não pode ser desfeita.`,
+      confirmLabel: "Excluir",
+      danger: true,
+    });
+    if (!confirmed) return;
     try { await deleteBill(item.id); setItems((current) => current.filter((bill) => bill.id !== item.id)); }
     catch (error) { setStatus({ loading: false, error: error.response?.data?.error || "Não foi possível excluir a conta." }); }
   }
