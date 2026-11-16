@@ -1,0 +1,6 @@
+DISPLAY_NAME=FinanceApp-API
+MAIN=backend/src/app.js
+MEMORY=512
+VERSION=recommended
+SUBDOMAIN=finance-api-ryan
+DESCRIPTION=Backend Node/Express do Finance App

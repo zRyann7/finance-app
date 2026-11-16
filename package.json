@@ -1,0 +1,8 @@
+{
+  "name": "finance-app",
+  "private": true,
+  "scripts": {
+    "postinstall": "npm install --prefix backend --omit=dev",
+    "start": "npm start --prefix backend"
+  }
+}
